@@ -58,6 +58,11 @@ gradleDist {
         doTest('nested-expansion')
     }
 
+    @Test
+    void 'when multiple distributions are configured then multiple distributions are created'() {
+        doTest('multiple-distributions')
+    }
+
     private void doTest(String testName) {
         def testFiles = prepareInput(testName)
         GradleRunner.create()
@@ -74,11 +79,12 @@ gradleDist {
         def inputRootDir = copy(new File(testRoot, 'input'))
         createGradleFile(inputRootDir)
         createGradleDistributionZip(inputRootDir)
-        return new TestFiles(inputRootDir, new File(testRoot, 'expected-init.d'))
+        return new TestFiles(inputRootDir, new File(testRoot, 'expected'))
     }
 
     private static File copy(File dir) {
         def result = Files.createTempDirectory("${dir.name}-tmp").toFile()
+        result.deleteOnExit()
         def resourcesRoot = new File(result, 'src/main/resources')
         Files.createDirectories(resourcesRoot.toPath())
         def children = dir.listFiles()
@@ -122,9 +128,14 @@ gradleDist {
     private static void verify(File expectedRootDir, File actualDistDir) {
         def filter = { it.directory } as FileFilter
         def expectedDistributions = expectedRootDir.listFiles(filter)
-        if (expectedDistributions.length == 0) {
+        if (expectedDistributions.length < 2) {
             assertEquals(actualDistDir.list().length, 1)
-            verify(expectedRootDir, getZipFs(actualDistDir, null))
+            verify(new File(expectedRootDir, 'init.d'), getZipFs(actualDistDir, null))
+        } else {
+            for (expectedDistributionRootDir in expectedDistributions) {
+                verify(new File(expectedDistributionRootDir, 'init.d'),
+                       getZipFs(actualDistDir, expectedDistributionRootDir.name))
+            }
         }
     }
 
@@ -135,7 +146,7 @@ gradleDist {
         }
         zipName += '.zip'
         def zip = new  File(parentDir, zipName)
-        assertTrue(zip.file)
+        assertTrue("Expected to find a custom distribution at $zip.absolutePath but it's not there", zip.file)
         return FileSystems.newFileSystem(URI.create("jar:${zip.toPath().toUri()}"), ['create': 'false'])
     }
 

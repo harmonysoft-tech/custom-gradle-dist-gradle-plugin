@@ -32,6 +32,11 @@ class CustomGradleDistributionPlugin implements Plugin<Project> {
 
             project.task('build').doLast {
                 def baseDistribution = getBaseGradleDistribution(project, extension)
+
+                def customDistributionsDir = getCustomDistributionsRootDir(project)
+                remove(customDistributionsDir)
+                Files.createDirectories(customDistributionsDir.toPath())
+
                 def distributions = getDistributions(project)
                 if (distributions.empty) {
                     prepareCustomDistribution(null, baseDistribution, project, extension)
@@ -90,6 +95,9 @@ class CustomGradleDistributionPlugin implements Plugin<Project> {
         return project.file('src/main/resources/include')
     }
 
+    private static File getCustomDistributionsRootDir(Project project) {
+        return new File(project.buildDir, 'gradle-dist')
+    }
 
     private static File getBaseGradleDistribution(Project project, CustomGradleDistExtension extension) {
         try {
@@ -141,9 +149,7 @@ class CustomGradleDistributionPlugin implements Plugin<Project> {
             customProjectPart += "-$distribution"
         }
         def customDistributionFileName = "$gradlePart-${customProjectPart}.zip"
-        def customDistributionsDir = new File(project.buildDir, 'gradle-dist')
-        remove(customDistributionsDir)
-        Files.createDirectories(customDistributionsDir.toPath())
+        def customDistributionsDir = getCustomDistributionsRootDir(project)
         File result = new File(customDistributionsDir, customDistributionFileName)
 
         copyBaseDistribution(baseDistribution, result)
@@ -298,6 +304,19 @@ class CustomGradleDistributionPlugin implements Plugin<Project> {
     }
 
     private static String indentText(String text, int indent) {
-        return text.replaceAll("\\n", "\n" + " " * indent)
+        def indentString = " " * indent
+        StringBuilder buffer = new StringBuilder()
+        def firstLine = true
+        text.eachLine {
+            if (!firstLine) {
+                buffer.append('\n')
+            }
+            if (!firstLine && !it.trim().isEmpty()) {
+                buffer.append(indentString)
+            }
+            buffer.append(it)
+            firstLine = false
+        }
+        return buffer.toString()
     }
 }
