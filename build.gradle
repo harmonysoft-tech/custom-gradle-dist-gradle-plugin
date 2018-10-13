@@ -11,7 +11,7 @@ repositories {
 gradlePlugin {
     plugins {
         gradleDist {
-            id = 'tech.harmonysoft.gradle-dist-plugin'
+            id = 'tech.harmonysoft.custom-gradle-dist-plugin'
             implementationClass = 'tech.harmonysoft.oss.gradle.dist.CustomGradleDistributionPlugin'
         }
     }

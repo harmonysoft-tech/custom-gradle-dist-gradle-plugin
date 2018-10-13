@@ -1,2 +1,147 @@
-# custom-gradle-dist-gradle-plugin
-TBD
+ ## Overview
+ 
+ This plugin facilitates custom Gradle wrappers construction. For example, we can define [common part](sample/single-custom-gradle-distribution/custom-distribution/src/main/resources/init.d/setup.gradle) which is [shared](sample/single-custom-gradle-distribution/client-project/gradle/wrapper/gradle-wrapper.properties#L3) through a custom Gradle distribution and have a terse end-project Gradle setup like [this](sample/single-custom-gradle-distribution/client-project/build.gradle).
+ 
+ ## Problem
+ 
+ Gradle scripts quite often contain duplicate parts, that's especially true for micro-service architecture where there are many small servers and each of them has its own configuration.
+   
+ One solution to that is putting common parts to a Gradle plugin. However, such extension would be specific to particular company and is unlikely going to the Gradle plugin repository (to allow [shorthand access](https://docs.gradle.org/current/userguide/plugins.html#sec:plugins_block)).  
+ That means that it still would be necessary to have a setup like below in every project:  
+ ```groovy
+ buildscript {
+     repositorirs {
+         maven {
+             url 'http://artifactory.mycompany.com/external-dependencies-repo'
+         }
+         classpath 'com.mycompany:gradle-plugin:1.0.0'
+     }
+ }
+ 
+ apply plugin: 'com.mycompany.gradle-plugin'
+
+```
+
+## Implementation
+
+Gradle automatically applies [init scripts](https://docs.gradle.org/current/userguide/init_scripts.html) from [_Gradle_ wrapper]((https://docs.gradle.org/current/userguide/gradle_wrapper.html))'s _init.d_ directory. That's why we can do the following:
+1. Fetch a 'pure' _Gradle_ distribution of particular version
+2. Put our scripts with common logic into it's _init.d_ directory
+3. Store that modified _Gradle_ distribution in our repository
+4. Reference that distribution from the _Gradle Wrapper_ config in our projects    
+ 
+## Usage
+
+### Configure Custom Distribution
+
+1. Create new Gradle project (an empty *build.gradle*) 
+2. Register this plugin there:
+    ```groovy
+    plugins {
+        id 'tech.harmonysoft.custom-gradle-dist-plugin' version '1.0'
+    }
+    ```
+ 3. Specify target settings in the `gradleDist {}` block.  
+     *mandatory settings:*
+     * *gradleVersion* - base Gradle wrapper version
+     * *customDistributionName* - a unique identifier for the custom Gradle distribution
+     * *customDistributionVersion* - custom distribution version
+     
+     *optional settings:*
+     * *gradleDistributionType* - allows to specify base Gradle distribution type. *'bin'* and *'all'* [are available](https://docs.gradle.org/current/userguide/gradle_wrapper.html#sec:adding_wrapper), *'bin'* is used by default  
+     
+    Resulting *build.gradle* might look like below:  
+    ```groovy
+    plugins {
+        id 'tech.harmonysoft.custom-gradle-dist-plugin' version '1.0'
+    }
+    
+    gradleDist {
+        gradleVersion = '4.10'
+        customDistributionVersion = '1.0'
+        customDistributionName = 'my-project'
+    }
+    ```
+4. Define common setup to be included to the custom Gradle distribution in the project's *src/main/resources/init.d* directory  
+    
+    Note that the plugin supports simple text processing engine - it's possible to put utility scripts to the *src/main/resources/include*. Their content is applied to files from *src/main/resources/init.d* using `$utility-script-name$` syntax.  
+    
+    For example we can have a file *src/main/resources/init.d/setup.gradle*:  
+    ```groovy
+    allprojects {
+        $dependencies$
+    }
+    ```
+    
+    and the following files in the *src/main/resources/include* directory:  
+    
+    *src/main/resources/include/dependencies.gradle*:  
+    
+    ```groovy
+    dependencies {
+        compile 'com.fasterxml.jackson.core:jackson-core:$jackson-version$'
+        compile 'com.fasterxml.jackson.module:jackson-module-kotlin:$jackson-version$'
+    }
+    ```  
+    
+    *src/main/resources/include/jackson-version.gradle*:  
+    
+    ```groovy
+    2.9.6
+    ```  
+    
+    When custom Gradle distribution is created, its *init.d* directory has *setup.gradle* file with the following content then:  
+    
+    ```groovy
+    allprojects {
+        compile 'com.fasterxml.jackson.core:jackson-core:2.9.6'
+        compile 'com.fasterxml.jackson.module:jackson-module-kotlin:2.9.6'  
+    }
+    ```  
+    
+    Note that text processing might be nested, i.e. files from *src/main/resources/include* might refer to another files from the same directory through the `$file-name$` syntax.
+    
+    There is an alternative setup where we want to produce more than one Gradle wrapper distribution (e.g. '*library*' and '*service*'). In this situation corresponding directories should be done in the *src/main/resources/init.d*:  
+    ```
+    src
+     |__ main
+         |__ resources
+                 |__ init.d
+                       |__ library
+                       |      |__ library-setup.gradle
+                       |
+                       |__ server
+                              |__ server-setup.gradle   
+    ```  
+    
+    Here is what we have after the build:  
+    ```
+    build
+      |__ gradle-dist
+               |__ gradle-4.10-my-project-1.0-library.zip
+               |
+               |__ gradle-4.10-my-project-1.0-server.zip
+    ```
+    
+5. Build Gradle distribution(s)
+
+    ```
+    ./gradlew build
+    ```
+    
+    The distribution(s) are located in the *build/gradle-dist*
+
+### Configure Client Project
+
+Just define your custom Gradle wrapper in the *gradle/wrapper/gradle-wrapper.properties* file:  
+```properties
+distributionBase=GRADLE_USER_HOME
+distributionPath=wrapper/dists
+zipStoreBase=GRADLE_USER_HOME
+zipStorePath=wrapper/dists
+distributionUrl=http\://mycompany.com/repository/chillout-release/com/mycompany/gradle-dist/gradle-4.10-my-project-1.0.zip
+```
+
+## Examples
+
+Complete examples can be found [here](sample/README.md)
