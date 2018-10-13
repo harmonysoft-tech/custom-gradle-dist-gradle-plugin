@@ -1,0 +1,6 @@
+allprojects {
+    dependencies {
+        compile 'org.springframework.boot:spring-boot-starter-log4j2:2.0.5.RELEASE'
+        compile 'org.springframework.boot:spring-boot-starter-data-mongodb:2.0.5.RELEASE'
+    }
+}

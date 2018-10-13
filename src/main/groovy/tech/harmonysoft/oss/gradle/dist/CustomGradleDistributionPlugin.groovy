@@ -241,16 +241,28 @@ class CustomGradleDistributionPlugin implements Plugin<Project> {
                     + "at $includeRootDir.absolutePath")
             return file
         }
-        def includes = [:].withDefault {
+        List<Map<String, String>> includesRef = []
+        def includes = new HashMap<String, String>().withDefault {
             def include = new File(includeRootDir, "${it}.gradle")
             if (include.file) {
-                return new String(Files.readAllBytes(include.toPath()))
+                return expand(project,
+                              file,
+                              includesRef[0],
+                              new String(Files.readAllBytes(include.toPath()), StandardCharsets.UTF_8))
             } else {
                 return null
             }
         }
+        includesRef.add(includes)
 
         def text = new String(Files.readAllBytes(file.toPath()))
+        def expandedText = expand(project, file, includes, text)
+
+        def result = Files.createTempFile("", "${file.name}.tmp")
+        return Files.write(result, expandedText.getBytes(StandardCharsets.UTF_8)).toFile()
+    }
+
+    private static String expand(Project project, File file, Map<String, String> includes, String text) {
         def matcher = PATTERN.matcher(text)
         int start = 0
         def buffer = new StringBuilder()
@@ -271,12 +283,7 @@ class CustomGradleDistributionPlugin implements Plugin<Project> {
             buffer.append(text.substring(start))
         }
 
-        if (buffer.length() <= 0) {
-            return file
-        }
-
-        def result = Files.createTempFile("", "${file.name}.tmp")
-        return Files.write(result, buffer.toString().getBytes(StandardCharsets.UTF_8)).toFile()
+        return buffer.length() <= 0 ? text : buffer.toString()
     }
 
     private static int getIndent(String text, int offset) {

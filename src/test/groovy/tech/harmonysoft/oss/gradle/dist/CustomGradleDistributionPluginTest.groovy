@@ -53,11 +53,16 @@ gradleDist {
         doTest('no-unnecessary-expansion')
     }
 
+    @Test
+    void 'when nested expansion is configured then it is correctly expanded'() {
+        doTest('nested-expansion')
+    }
+
     private void doTest(String testName) {
         def testFiles = prepareInput(testName)
         GradleRunner.create()
                     .withProjectDir(testFiles.inputRootDir)
-                    .withArguments('build')
+                    .withArguments('build', '--stacktrace')
                     .withPluginClasspath()
                     .withDebug(true)
                     .build()
