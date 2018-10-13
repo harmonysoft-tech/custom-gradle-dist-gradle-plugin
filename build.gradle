@@ -1,0 +1,22 @@
+plugins {
+    id 'java-gradle-plugin'
+    id 'com.gradle.plugin-publish' version '0.10.0'
+    id 'groovy'
+}
+
+repositories {
+    mavenCentral()
+}
+
+gradlePlugin {
+    plugins {
+        gradleDist {
+            id = 'tech.harmonysoft.gradle-dist-plugin'
+            implementationClass = 'tech.harmonysoft.oss.gradle.dist.CustomGradleDistributionPlugin'
+        }
+    }
+}
+
+dependencies {
+    testCompile 'junit:junit:4.12'
+}
