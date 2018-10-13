@@ -1,8 +1,8 @@
- ## Overview
+## Overview
  
  This plugin facilitates custom Gradle wrappers construction. For example, we can define [common part](sample/single-custom-gradle-distribution/custom-distribution/src/main/resources/init.d/setup.gradle) which is [shared](sample/single-custom-gradle-distribution/client-project/gradle/wrapper/gradle-wrapper.properties#L3) through a custom Gradle distribution and have a terse end-project Gradle setup like [this](sample/single-custom-gradle-distribution/client-project/build.gradle).
  
- ## Problem
+## Problem
  
  Gradle scripts quite often contain duplicate parts, that's especially true for micro-service architecture where there are many small servers and each of them has its own configuration.
    
@@ -22,7 +22,7 @@
 
 ```
 
-## Implementation
+## Solution
 
 Gradle automatically applies [init scripts](https://docs.gradle.org/current/userguide/init_scripts.html) from [_Gradle_ wrapper]((https://docs.gradle.org/current/userguide/gradle_wrapper.html))'s _init.d_ directory. That's why we can do the following:
 1. Fetch a 'pure' _Gradle_ distribution of particular version
@@ -35,7 +35,7 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
 ### Configure Custom Distribution
 
 1. Create new Gradle project (an empty *build.gradle*) 
-2. Register this plugin there:
+2. Register the plugin there:
     ```groovy
     plugins {
         id 'tech.harmonysoft.custom-gradle-dist-plugin' version '1.0'
@@ -101,14 +101,14 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
     
     Note that text processing might be nested, i.e. files from *src/main/resources/include* might refer to another files from the same directory through the `$file-name$` syntax.
     
-    There is an alternative setup where we want to produce more than one Gradle wrapper distribution (e.g. '*library*' and '*service*'). In this situation corresponding directories should be done in the *src/main/resources/init.d*:  
+    There is an alternative setup where we want to produce more than one Gradle wrapper distribution (e.g. '*android*' and '*server*'). In this situation corresponding directories should be done in the *src/main/resources/init.d*:  
     ```
     src
      |__ main
          |__ resources
                  |__ init.d
                        |__ library
-                       |      |__ library-setup.gradle
+                       |      |__ android-setup.gradle
                        |
                        |__ server
                               |__ server-setup.gradle   
@@ -118,7 +118,7 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
     ```
     build
       |__ gradle-dist
-               |__ gradle-4.10-my-project-1.0-library.zip
+               |__ gradle-4.10-my-project-1.0-android.zip
                |
                |__ gradle-4.10-my-project-1.0-server.zip
     ```
@@ -133,7 +133,7 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
 
 ### Configure Client Project
 
-Just define your custom Gradle wrapper in the *gradle/wrapper/gradle-wrapper.properties* file:  
+Just define your custom Gradle wrapper's location in the *gradle/wrapper/gradle-wrapper.properties* file:  
 ```properties
 distributionBase=GRADLE_USER_HOME
 distributionPath=wrapper/dists
@@ -144,4 +144,4 @@ distributionUrl=http\://mycompany.com/repository/chillout-release/com/mycompany/
 
 ## Examples
 
-Complete examples can be found [here](sample/README.md)
+Complete working examples can be found [here](sample/README.md)

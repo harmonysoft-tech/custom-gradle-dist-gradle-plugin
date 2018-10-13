@@ -1,6 +1,6 @@
 ## Overview
 
-This is an example of using custom gradle distribution for projects with the same setup - we create a single custom distribution and use it everywhere.
+This is an example of using custom Gradle distribution for projects with the same setup - we create a single custom distribution and use it everywhere.
 
 ## Custom Distribution
 
