@@ -21,9 +21,26 @@ class CustomGradleDistributionPluginTest {
     private static final String PROJECT_NAME = 'my-project'
     private static final String PROJECT_VERSION = '1.0'
 
+    private static final BUILD_TEMPLATE = """
+plugins {
+    id 'tech.harmonysoft.gradle-dist-plugin'
+}
+
+gradleDist {
+    gradleVersion = '$GRADLE_VERSION'
+    customDistributionVersion = '$PROJECT_VERSION'
+    customDistributionName = '$PROJECT_NAME'
+}
+"""
+
     @Test
     void 'when client project has a single distribution and no templates then it is correctly packaged'() {
         doTest('single-distribution-no-templates')
+    }
+
+    @Test
+    void 'when client project has a single distribution and single template then it is correctly packaged'() {
+        doTest('single-distribution-single-template')
     }
 
     private void doTest(String testName) {
@@ -40,15 +57,18 @@ class CustomGradleDistributionPluginTest {
     private TestFiles prepareInput(String testDir) {
         def testRoot = new File(getClass().getResource("/$testDir").file)
         def inputRootDir = copy(new File(testRoot, 'input'))
+        createGradleFile(inputRootDir)
         createGradleDistributionZip(inputRootDir)
         return new TestFiles(inputRootDir, new File(testRoot, 'expected-init.d'))
     }
 
     private static File copy(File dir) {
         def result = Files.createTempDirectory("${dir.name}-tmp").toFile()
+        def resourcesRoot = new File(result, 'src/main/resources')
+        Files.createDirectories(resourcesRoot.toPath())
         def children = dir.listFiles()
         for (child in children) {
-            copy(child, result)
+            copy(child, resourcesRoot)
         }
         return result
     }
@@ -66,6 +86,11 @@ class CustomGradleDistributionPluginTest {
                 }
             }
         }
+    }
+
+    private static void createGradleFile(File projectRootDir) {
+        Files.write(new File(projectRootDir, 'build.gradle').toPath(),
+                    BUILD_TEMPLATE.getBytes(StandardCharsets.UTF_8))
     }
 
     private static void createGradleDistributionZip(File projectRootDir) {

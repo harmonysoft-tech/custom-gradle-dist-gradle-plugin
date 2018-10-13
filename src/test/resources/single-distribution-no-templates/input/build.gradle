@@ -1,9 +1,0 @@
-plugins {
-    id 'tech.harmonysoft.gradle-dist-plugin'
-}
-
-gradleDist {
-    gradleVersion = '4.10'
-    customDistributionVersion = '1.0'
-    customDistributionName = 'my-project'
-}
