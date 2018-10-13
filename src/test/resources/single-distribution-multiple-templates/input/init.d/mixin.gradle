@@ -1,0 +1,11 @@
+initscript {
+    $repository$
+}
+
+allprojects {
+    apply plugin: 'java'
+
+    $version$
+
+    $repository$
+}

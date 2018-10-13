@@ -43,6 +43,11 @@ gradleDist {
         doTest('single-distribution-single-template')
     }
 
+    @Test
+    void 'when client project has a single distribution and multiple templates then it is correctly packaged'() {
+        doTest('single-distribution-multiple-templates')
+    }
+
     private void doTest(String testName) {
         def testFiles = prepareInput(testName)
         GradleRunner.create()
@@ -54,8 +59,8 @@ gradleDist {
         verify(testFiles.expectedRootDir, new File(testFiles.inputRootDir, 'build/gradle-dist'))
     }
 
-    private TestFiles prepareInput(String testDir) {
-        def testRoot = new File(getClass().getResource("/$testDir").file)
+    private TestFiles prepareInput(String testDirName) {
+        def testRoot = new File(getClass().getResource("/$testDirName").file)
         def inputRootDir = copy(new File(testRoot, 'input'))
         createGradleFile(inputRootDir)
         createGradleDistributionZip(inputRootDir)
