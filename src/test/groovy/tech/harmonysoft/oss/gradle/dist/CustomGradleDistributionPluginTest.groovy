@@ -48,6 +48,11 @@ gradleDist {
         doTest('single-distribution-multiple-templates')
     }
 
+    @Test
+    void 'when inadvertent expansion syntax is detected then it is left as-is'() {
+        doTest('no-unnecessary-expansion')
+    }
+
     private void doTest(String testName) {
         def testFiles = prepareInput(testName)
         GradleRunner.create()

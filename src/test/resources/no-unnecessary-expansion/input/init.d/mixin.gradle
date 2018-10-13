@@ -1,0 +1,5 @@
+allprojects {
+    version = "$baseVersion.$minorVersionToUse"
+
+    $repository$
+}
