@@ -4,7 +4,7 @@ This is an example of using custom Gradle distribution for projects with the sam
 
 ## Custom Distribution
 
-[custom-distribution](custom-distribution) defines common project setup in the [setup.gradle](custom-distribution/src/main/resources/init.d).
+[custom-distribution](custom-distribution) project defines common distribution setup in the [setup.gradle](custom-distribution/src/main/resources/init.d).
 
 ## Client Project
 

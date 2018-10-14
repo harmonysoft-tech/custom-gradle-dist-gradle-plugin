@@ -1,0 +1,20 @@
+initscript {
+    $repository$
+    dependencies {
+        classpath 'org.springframework.boot:spring-boot-gradle-plugin:2.0.5.RELEASE'
+        classpath 'io.spring.gradle:dependency-management-plugin:1.0.6.RELEASE'
+    }
+}
+
+allprojects {
+    // There is a known Gradle bug that non-bundled plugins can't be applied by id in init scripts.
+    // That's why we apply them by class name
+    apply plugin: org.springframework.boot.gradle.plugin.SpringBootPlugin
+    apply plugin: io.spring.gradle.dependencymanagement.DependencyManagementPlugin
+    
+    $common$
+
+    dependencies {
+        compile 'org.springframework.boot:spring-boot-starter-web'
+    }
+}

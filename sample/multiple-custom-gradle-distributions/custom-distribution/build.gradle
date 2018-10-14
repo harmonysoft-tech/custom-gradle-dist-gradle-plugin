@@ -5,5 +5,5 @@ plugins {
 gradleDist {
     gradleVersion = '4.10'
     customDistributionVersion = '1.0'
-    customDistributionName = 'test-single-distribution'
+    customDistributionName = 'test-multi-distributions'
 }

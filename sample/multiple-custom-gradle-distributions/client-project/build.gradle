@@ -1,0 +1,3 @@
+bootRun {
+    main = 'com.mycompany.MyApplication'
+}

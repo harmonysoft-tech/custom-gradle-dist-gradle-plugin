@@ -1,1 +1,2 @@
 * [single distribution](single-custom-gradle-distribution/README.md) demonstrates a setup where we share the same Gradle configuration for all target projects
+* [multiple distributions](multiple-custom-gradle-distributions/README.md) show how to configure and create more than one custom Gradle wrapper 
