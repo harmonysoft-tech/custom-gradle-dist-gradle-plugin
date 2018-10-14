@@ -1,5 +1,6 @@
 package tech.harmonysoft.oss.gradle.dist
 
+
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.Test
 
@@ -23,7 +24,7 @@ class CustomGradleDistributionPluginTest {
 
     private static final BUILD_TEMPLATE = """
 plugins {
-    id 'tech.harmonysoft.gradle-dist-plugin'
+    id 'tech.harmonysoft.custom-gradle-dist-plugin'
 }
 
 gradleDist {
@@ -61,6 +62,20 @@ gradleDist {
     @Test
     void 'when multiple distributions are configured then multiple distributions are created'() {
         doTest('multiple-distributions')
+    }
+
+    @Test
+    void 'when cyclic expansion chain is detected then it is reported'() {
+        def expectedError = 'detected a cyclic text expansion sequence'
+        def errorMessage = "Expected to get an exception with problem details when cyclic replacements chain " +
+                "is detected - '$expectedError'"
+        try {
+            doTest('cyclic-expansion')
+            fail(errorMessage)
+        } catch (e) {
+            assertTrue("$errorMessage. Got the following instead: '${e.message}'",
+                       e.message.contains(expectedError))
+        }
     }
 
     private void doTest(String testName) {

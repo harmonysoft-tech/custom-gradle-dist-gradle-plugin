@@ -247,14 +247,33 @@ class CustomGradleDistributionPlugin implements Plugin<Project> {
                     + "at $includeRootDir.absolutePath")
             return file
         }
+        def ongoingReplacements = new Stack<String>()
         List<Map<String, String>> includesRef = []
-        def includes = new HashMap<String, String>().withDefault {
-            def include = new File(includeRootDir, "${it}.gradle")
+        def includes = new HashMap<String, String>().withDefault { replacement ->
+            if (ongoingReplacements.contains(replacement)) {
+                def buffer = new StringBuilder('Can not create custom Gradle distribution - detected a cyclic text ' +
+                                                       'expansion sequence:\n')
+                def replacementsList = ongoingReplacements.toList()
+                replacementsList.add(replacement)
+                replacementsList.eachWithIndex { ongoingReplacement, i ->
+                    if (i == 0) {
+                        buffer.append("'$ongoingReplacement' ($file.absolutePath)")
+                    } else {
+                        def location = new File(includeRootDir, "${replacementsList[i - 1]}.gradle")
+                        buffer.append('\n  |\n').append("'$ongoingReplacement' ($location.absolutePath)")
+                    }
+                }
+                throw new IllegalStateException(buffer.toString())
+            }
+            def include = new File(includeRootDir, "${replacement}.gradle")
             if (include.file) {
-                return expand(project,
-                              file,
-                              includesRef[0],
-                              new String(Files.readAllBytes(include.toPath()), StandardCharsets.UTF_8))
+                ongoingReplacements.push(replacement)
+                def result = expand(project,
+                                    file,
+                                    includesRef[0],
+                                    new String(Files.readAllBytes(include.toPath()), StandardCharsets.UTF_8))
+                ongoingReplacements.pop()
+                return result
             } else {
                 return null
             }
