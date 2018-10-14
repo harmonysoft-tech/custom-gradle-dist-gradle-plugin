@@ -38,7 +38,7 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
 2. Register the plugin there:
     ```groovy
     plugins {
-        id 'tech.harmonysoft.custom-gradle-dist-plugin' version '1.0'
+        id 'tech.harmonysoft.custom-gradle-dist-plugin' version '1.1'
     }
     ```
  3. Specify target settings in the `gradleDist {}` block.  
@@ -53,7 +53,7 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
     Resulting *build.gradle* might look like below:  
     ```groovy
     plugins {
-        id 'tech.harmonysoft.custom-gradle-dist-plugin' version '1.0'
+        id 'tech.harmonysoft.custom-gradle-dist-plugin' version '1.1'
     }
     
     gradleDist {
@@ -144,4 +144,25 @@ distributionUrl=http\://mycompany.com/repository/chillout-release/com/mycompany/
 
 ## Examples
 
-Complete working examples can be found [here](sample/README.md)
+Complete working examples can be found [here](sample/README.md).
+
+## Releases
+
+[Release Notes](RELEASE.md).  
+
+The latest plugin version can be found [here](https://plugins.gradle.org/plugin/tech.harmonysoft.custom-gradle-dist-plugin).
+
+## How to Contribute
+
+* [report a problem/ask for enhancement](https://github.com/denis-zhdanov/custom-gradle-dist-gradle-plugin/issues)
+* [submit a pull request](https://github.com/denis-zhdanov/custom-gradle-dist-gradle-plugin/pulls)
+* [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=3GJDPN3TH8T48&lc=RU&item_name=Traute&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted)
+
+## Contributors
+
+* [Denis Zhdanov](https://github.com/denis-zhdanov)
+
+## Feedback
+
+Please use any of the channels below to provide your feedback, it's really valuable for me:
+* [email](mailto:denzhdanov@gmail.com)
