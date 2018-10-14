@@ -24,7 +24,7 @@ class CustomGradleDistributionPluginTest {
 
     private static final BUILD_TEMPLATE = """
 plugins {
-    id 'tech.harmonysoft.custom-gradle-dist-plugin'
+    id 'tech.harmonysoft.oss.custom-gradle-dist-plugin'
 }
 
 gradleDist {
@@ -82,7 +82,7 @@ gradleDist {
     void 'when there is an existing build task then the plugin attaches to it'() {
         doTest('existing-build-task', """
 plugins {
-    id 'tech.harmonysoft.custom-gradle-dist-plugin'
+    id 'tech.harmonysoft.oss.custom-gradle-dist-plugin'
     id 'java'
 }
 

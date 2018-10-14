@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'tech.harmonysoft'
-version = '1.2'
+version = '1.3'
 
 repositories {
     mavenCentral()
@@ -14,7 +14,7 @@ repositories {
 gradlePlugin {
     plugins {
         gradleDist {
-            id = 'tech.harmonysoft.custom-gradle-dist-plugin'
+            id = 'tech.harmonysoft.oss.custom-gradle-dist-plugin'
             implementationClass = 'tech.harmonysoft.oss.gradle.dist.CustomGradleDistributionPlugin'
             displayName = 'Custom Gradle Wrapper construction plugin'
             description = 'Helps setting up custom Gradle wrapper construction'
