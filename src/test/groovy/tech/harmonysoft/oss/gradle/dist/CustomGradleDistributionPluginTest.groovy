@@ -78,8 +78,28 @@ gradleDist {
         }
     }
 
+    @Test
+    void 'when there is an existing build task then the plugin attaches to it'() {
+        doTest('existing-build-task', """
+plugins {
+    id 'tech.harmonysoft.custom-gradle-dist-plugin'
+    id 'java'
+}
+
+gradleDist {
+    gradleVersion = '$GRADLE_VERSION'
+    customDistributionVersion = '$PROJECT_VERSION'
+    customDistributionName = '$PROJECT_NAME'
+}
+""")
+    }
+
     private void doTest(String testName) {
-        def testFiles = prepareInput(testName)
+        doTest(testName, BUILD_TEMPLATE)
+    }
+
+    private void doTest(String testName, String buildGradleContent) {
+        def testFiles = prepareInput(testName, buildGradleContent)
         GradleRunner.create()
                     .withProjectDir(testFiles.inputRootDir)
                     .withArguments('build', '--stacktrace')
@@ -89,10 +109,10 @@ gradleDist {
         verify(testFiles.expectedRootDir, new File(testFiles.inputRootDir, 'build/gradle-dist'))
     }
 
-    private TestFiles prepareInput(String testDirName) {
+    private TestFiles prepareInput(String testDirName, String buildGradleContent) {
         def testRoot = new File(getClass().getResource("/$testDirName").file)
         def inputRootDir = copy(new File(testRoot, 'input'))
-        createGradleFile(inputRootDir)
+        createGradleFile(inputRootDir, buildGradleContent)
         createGradleDistributionZip(inputRootDir)
         return new TestFiles(inputRootDir, new File(testRoot, 'expected'))
     }
@@ -124,9 +144,8 @@ gradleDist {
         }
     }
 
-    private static void createGradleFile(File projectRootDir) {
-        Files.write(new File(projectRootDir, 'build.gradle').toPath(),
-                    BUILD_TEMPLATE.getBytes(StandardCharsets.UTF_8))
+    private static void createGradleFile(File projectRootDir, String content) {
+        Files.write(new File(projectRootDir, 'build.gradle').toPath(), content.getBytes(StandardCharsets.UTF_8))
     }
 
     private static void createGradleDistributionZip(File projectRootDir) {

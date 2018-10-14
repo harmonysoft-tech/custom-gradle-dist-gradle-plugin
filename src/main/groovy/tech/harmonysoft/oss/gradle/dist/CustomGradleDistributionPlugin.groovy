@@ -30,7 +30,14 @@ class CustomGradleDistributionPlugin implements Plugin<Project> {
         project.afterEvaluate {
             validate(extension)
 
-            project.task('build').doLast {
+            def buildTask = project.tasks.collectEntries {
+                [(it.name) : (it)]
+            }['build']
+
+            if (buildTask == null) {
+                buildTask = project.task('build')
+            }
+            buildTask.doLast {
                 def baseDistribution = getBaseGradleDistribution(project, extension)
 
                 def customDistributionsDir = getCustomDistributionsRootDir(project)
