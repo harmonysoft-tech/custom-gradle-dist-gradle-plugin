@@ -142,6 +142,34 @@ zipStorePath=wrapper/dists
 distributionUrl=http\://mycompany.com/repository/chillout-release/com/mycompany/gradle-dist/gradle-4.10-my-project-1.0.zip
 ```
 
+### Note About Applying Plugins
+
+It's quite possible that we would like to apply common plugins in init scripts, e.g. our projects are all java and we want to specify `apply plugin: 'java'` in the init script.
+  
+Unfortunately, there is a known [old bug](https://github.com/gradle/gradle/issues/1322) in Gradle that non-bundled plugins can't be applied by id in init script.  
+
+A solution is to apply them by fully qualified class name.  
+
+E.g. given 'normal' plugins configuration:
+
+```groovy
+apply plugin: 'org.jetbrains.kotlin.jvm'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: "com.jfrog.artifactory"
+```
+
+We should configure them like below in init script:  
+
+```groovy
+allprojects {
+    apply plugin: org.jetbrains.kotlin.gradle.plugin.KotlinPlatformJvmPlugin
+    apply plugin: org.springframework.boot.gradle.plugin.SpringBootPlugin
+    apply plugin: io.spring.gradle.dependencymanagement.DependencyManagementPlugin
+    apply plugin: org.jfrog.gradle.plugin.artifactory.ArtifactoryPlugin
+}
+```
+
 ## Examples
 
 Complete working examples can be found [here](sample/README.md).
