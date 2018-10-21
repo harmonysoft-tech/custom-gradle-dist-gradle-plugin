@@ -1,6 +1,12 @@
 ## Overview
  
- This plugin facilitates custom Gradle wrappers construction. For example, we can define [common part](sample/single-custom-gradle-distribution/custom-distribution/src/main/resources/init.d/setup.gradle) which is [shared](sample/single-custom-gradle-distribution/client-project/gradle/wrapper/gradle-wrapper.properties#L3) through a custom Gradle distribution and have a terse end-project Gradle setup like [this](sample/single-custom-gradle-distribution/client-project/build.gradle).
+ This plugin facilitates custom Gradle wrappers construction. For example, we can define [common part](sample/multiple-custom-gradle-distributions/custom-distribution/src/main/resources/init.d/service/service.gradle) which is [shared](sample/multiple-custom-gradle-distributions/client-project/gradle/wrapper/gradle-wrapper.properties#L3) through a custom Gradle distribution and have a terse end-project Gradle setup like [this](sample/multiple-custom-gradle-distributions/client-project/build.gradle) (this is a complete *build.gradle* file):  
+ 
+ ```groovy
+bootRun {
+    main = 'com.mycompany.MyApplication'
+}
+```
  
 ## Problem
  
