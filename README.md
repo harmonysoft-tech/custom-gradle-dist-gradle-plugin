@@ -1,3 +1,7 @@
+## License
+
+See the [LICENSE](LICENSE.md) file for license rights and limitations (MIT).
+
 ## Overview
  
  This plugin facilitates custom Gradle wrappers construction. For example, we can define [common part](sample/multiple-custom-gradle-distributions/custom-distribution/src/main/resources/init.d/service/service.gradle) which is [shared](sample/multiple-custom-gradle-distributions/client-project/gradle/wrapper/gradle-wrapper.properties#L3) through a custom Gradle distribution and have a terse end-project Gradle setup like [this](sample/multiple-custom-gradle-distributions/client-project/build.gradle) (this is a complete *build.gradle* file):  
