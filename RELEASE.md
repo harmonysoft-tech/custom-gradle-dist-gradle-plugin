@@ -1,6 +1,9 @@
 ## Releases
 
-**v.1.2**
+**v.1.4**
+* added support for custom base distribution location - *rootUrl* property
+
+**v.1.3**
 * added *'oss'* to the plugin id
 
 **v.1.2**
