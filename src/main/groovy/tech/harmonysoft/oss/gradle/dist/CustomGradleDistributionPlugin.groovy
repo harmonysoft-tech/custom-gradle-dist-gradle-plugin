@@ -17,6 +17,7 @@ class CustomGradleDistExtension {
     String customDistributionName
     String customDistributionVersion
     String gradleDistributionType = 'bin'
+    String rootUrl = 'https://services.gradle.org/distributions'
 }
 
 class CustomGradleDistributionPlugin implements Plugin<Project> {
@@ -29,6 +30,7 @@ class CustomGradleDistributionPlugin implements Plugin<Project> {
 
         project.afterEvaluate {
             validate(extension)
+            def normalizedExtension = normalize(extension)
 
             def buildTask = project.tasks.collectEntries {
                 [(it.name) : (it)]
@@ -38,7 +40,7 @@ class CustomGradleDistributionPlugin implements Plugin<Project> {
                 buildTask = project.task('build')
             }
             buildTask.doLast {
-                def baseDistribution = getBaseGradleDistribution(project, extension)
+                def baseDistribution = getBaseGradleDistribution(project, normalizedExtension)
 
                 def customDistributionsDir = getCustomDistributionsRootDir(project)
                 remove(customDistributionsDir)
@@ -46,9 +48,11 @@ class CustomGradleDistributionPlugin implements Plugin<Project> {
 
                 def distributions = getDistributions(project)
                 if (distributions.empty) {
-                    prepareCustomDistribution(null, baseDistribution, project, extension)
+                    prepareCustomDistribution(null, baseDistribution, project, normalizedExtension)
                 } else {
-                    distributions.each { prepareCustomDistribution(it, baseDistribution, project, extension) }
+                    distributions.each {
+                        prepareCustomDistribution(it, baseDistribution, project, normalizedExtension)
+                    }
                 }
             }
         }
@@ -79,6 +83,15 @@ class CustomGradleDistributionPlugin implements Plugin<Project> {
         customDistributionName = 'my-project'
     }''')}
 
+    }
+
+    private static CustomGradleDistExtension normalize(CustomGradleDistExtension extension) {
+        def rootUrl = extension.rootUrl
+        if (rootUrl.endsWith("/")) {
+            rootUrl = rootUrl.substring(0, rootUrl.length() - 1)
+            extension.rootUrl = rootUrl
+        }
+        return extension
     }
 
     private static Collection<String> getDistributions(Project project) {
@@ -128,14 +141,15 @@ class CustomGradleDistributionPlugin implements Plugin<Project> {
                             + "gradle distribution")
                 }
             }
-            download(project, gradleZip, archiveDir)
+            download(project, extension.rootUrl, gradleZip, archiveDir)
         }
         return baseGradleArchive
     }
 
 
-    private static void download(Project project, String archiveName, File archiveDir) {
-        def fromUrl = "https://services.gradle.org/distributions/$archiveName"
+    private static void download(Project project, String rootUrl, String archiveName, File archiveDir) {
+//        def fromUrl = "https://services.gradle.org/distributions/$archiveName"
+        def fromUrl = "$rootUrl/$archiveName"
         def from = Channels.newChannel(new URL(fromUrl).openStream())
         def to = new File(archiveDir, archiveName)
         project.logger.lifecycle("About to download a gradle distribution from $fromUrl to $to.absolutePath")

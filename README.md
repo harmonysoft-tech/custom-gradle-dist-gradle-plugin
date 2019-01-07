@@ -48,7 +48,7 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
 2. Register the plugin there:
     ```groovy
     plugins {
-        id 'tech.harmonysoft.oss.custom-gradle-dist-plugin' version '1.3'
+        id 'tech.harmonysoft.oss.custom-gradle-dist-plugin' version '1.4'
     }
     ```
  3. Specify target settings in the `gradleDist {}` block.  
@@ -59,11 +59,12 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
      
      *optional settings:*
      * *gradleDistributionType* - allows to specify base Gradle distribution type. *'bin'* and *'all'* [are available](https://docs.gradle.org/current/userguide/gradle_wrapper.html#sec:adding_wrapper), *'bin'* is used by default  
+     * *rootUrl* - url to the root base Gradle distribution path, *https://services.gradle.org/distributions* by default. This property is convenient in restricted environments where *service.gradle.org* is unavailable. We can get target gradle distribution manually, deploy it to a server inside the private network and use it as a base for our custom Gradle distributions
      
     Resulting *build.gradle* might look like below:  
     ```groovy
     plugins {
-        id 'tech.harmonysoft.oss.custom-gradle-dist-plugin' version '1.3'
+        id 'tech.harmonysoft.oss.custom-gradle-dist-plugin' version '1.4'
     }
     
     gradleDist {
