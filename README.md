@@ -59,7 +59,12 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
      
      *optional settings:*
      * *gradleDistributionType* - allows to specify base Gradle distribution type. *'bin'* and *'all'* [are available](https://docs.gradle.org/current/userguide/gradle_wrapper.html#sec:adding_wrapper), *'bin'* is used by default  
-     * *rootUrl* - url to the root base Gradle distribution path, *https://services.gradle.org/distributions* by default. This property is convenient in restricted environments where *service.gradle.org* is unavailable. We can get target gradle distribution manually, deploy it to a server inside the private network and use it as a base for our custom Gradle distributions
+     * *rootUrlMapper* - a function which allows to build an url to the root base Gradle distribution path. This property is convenient in restricted environments where *https://service.gradle.org* is unavailable. We can deploy target Gradle distribution to a server inside the private network and use it as a base for our custom Gradle distributions. The function receives the following arguments:  
+       * *version* - target base Gradle distribution version, e.g. *5.1*
+       * *type* - target base Gradle distribution type, e.g. *bin*  
+       
+       Following implementation us used by default:  
+       `return "https://services.gradle.org/distributions/gradle-$version-${type}.zip"` 
      
     Resulting *build.gradle* might look like below:  
     ```groovy
