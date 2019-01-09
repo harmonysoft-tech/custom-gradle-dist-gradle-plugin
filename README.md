@@ -48,7 +48,7 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
 2. Register the plugin there:
     ```groovy
     plugins {
-        id 'tech.harmonysoft.oss.custom-gradle-dist-plugin' version '1.4'
+        id 'tech.harmonysoft.oss.custom-gradle-dist-plugin' version '1.5'
     }
     ```
  3. Specify target settings in the `gradleDist {}` block.  
@@ -64,7 +64,7 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
     Resulting *build.gradle* might look like below:  
     ```groovy
     plugins {
-        id 'tech.harmonysoft.oss.custom-gradle-dist-plugin' version '1.4'
+        id 'tech.harmonysoft.oss.custom-gradle-dist-plugin' version '1.5'
     }
     
     gradleDist {

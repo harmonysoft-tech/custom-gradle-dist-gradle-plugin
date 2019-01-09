@@ -1,5 +1,5 @@
 plugins {
-    id 'tech.harmonysoft.oss.custom-gradle-dist-plugin' version '1.4'
+    id 'tech.harmonysoft.oss.custom-gradle-dist-plugin' version '1.5'
 }
 
 gradleDist {

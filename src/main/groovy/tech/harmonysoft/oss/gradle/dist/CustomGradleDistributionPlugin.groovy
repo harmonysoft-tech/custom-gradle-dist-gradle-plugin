@@ -17,7 +17,9 @@ class CustomGradleDistExtension {
     String customDistributionName
     String customDistributionVersion
     String gradleDistributionType = 'bin'
-    String rootUrl = 'https://services.gradle.org/distributions'
+    def rootUrlMapper = { version, type ->
+        return "https://services.gradle.org/distributions/gradle-$version-${type}.zip"
+    }
 }
 
 class CustomGradleDistributionPlugin implements Plugin<Project> {
@@ -30,7 +32,6 @@ class CustomGradleDistributionPlugin implements Plugin<Project> {
 
         project.afterEvaluate {
             validate(extension)
-            def normalizedExtension = normalize(extension)
 
             def buildTask = project.tasks.collectEntries {
                 [(it.name) : (it)]
@@ -40,7 +41,7 @@ class CustomGradleDistributionPlugin implements Plugin<Project> {
                 buildTask = project.task('build')
             }
             buildTask.doLast {
-                def baseDistribution = getBaseGradleDistribution(project, normalizedExtension)
+                def baseDistribution = getBaseGradleDistribution(project, extension)
 
                 def customDistributionsDir = getCustomDistributionsRootDir(project)
                 remove(customDistributionsDir)
@@ -48,10 +49,10 @@ class CustomGradleDistributionPlugin implements Plugin<Project> {
 
                 def distributions = getDistributions(project)
                 if (distributions.empty) {
-                    prepareCustomDistribution(null, baseDistribution, project, normalizedExtension)
+                    prepareCustomDistribution(null, baseDistribution, project, extension)
                 } else {
                     distributions.each {
-                        prepareCustomDistribution(it, baseDistribution, project, normalizedExtension)
+                        prepareCustomDistribution(it, baseDistribution, project, extension)
                     }
                 }
             }
@@ -83,15 +84,6 @@ class CustomGradleDistributionPlugin implements Plugin<Project> {
         customDistributionName = 'my-project'
     }''')}
 
-    }
-
-    private static CustomGradleDistExtension normalize(CustomGradleDistExtension extension) {
-        def rootUrl = extension.rootUrl
-        if (rootUrl.endsWith("/")) {
-            rootUrl = rootUrl.substring(0, rootUrl.length() - 1)
-            extension.rootUrl = rootUrl
-        }
-        return extension
     }
 
     private static Collection<String> getDistributions(Project project) {
@@ -141,22 +133,21 @@ class CustomGradleDistributionPlugin implements Plugin<Project> {
                             + "gradle distribution")
                 }
             }
-            download(project, extension.rootUrl, gradleZip, archiveDir)
+            download(project,
+                     extension.rootUrlMapper(extension.gradleVersion, extension.gradleDistributionType),
+                     new File(archiveDir, gradleZip))
         }
         return baseGradleArchive
     }
 
 
-    private static void download(Project project, String rootUrl, String archiveName, File archiveDir) {
-//        def fromUrl = "https://services.gradle.org/distributions/$archiveName"
-        def fromUrl = "$rootUrl/$archiveName"
+    private static void download(Project project, String fromUrl, File toFile) {
         def from = Channels.newChannel(new URL(fromUrl).openStream())
-        def to = new File(archiveDir, archiveName)
-        project.logger.lifecycle("About to download a gradle distribution from $fromUrl to $to.absolutePath")
-        new FileOutputStream(to).withCloseable {
+        project.logger.lifecycle("About to download a gradle distribution from $fromUrl to $toFile.absolutePath")
+        new FileOutputStream(toFile).withCloseable {
             it.channel.transferFrom(from, 0, Long.MAX_VALUE)
         }
-        project.logger.lifecycle("Downloaded a gradle distribution from $fromUrl to $to.absolutePath")
+        project.logger.lifecycle("Downloaded a gradle distribution from $fromUrl to $toFile.absolutePath")
     }
 
     private static void prepareCustomDistribution(String distribution,
