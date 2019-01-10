@@ -1,5 +1,8 @@
 ## Releases
 
+**v.1.6**
+* fixed a bug with custom Gradle distribution file lock which resulted in an inability to build under Windows
+
 **v.1.5**
 * allow full customization of base Gradle distribution location
 

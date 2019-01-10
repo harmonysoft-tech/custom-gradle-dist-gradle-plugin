@@ -174,6 +174,8 @@ class CustomGradleDistributionPlugin implements Plugin<Project> {
             def from = new FileInputStream(baseDistribution).channel
             def to = new FileOutputStream(customDistribution).channel
             to.transferFrom(from, 0, Long.MAX_VALUE)
+            from.close()
+            to.close()
         } catch (Exception e) {
             throw new BuildException("Failed to copy base gradle distribution from $baseDistribution.absolutePath "
                     + "to $customDistribution.absolutePath", e)
