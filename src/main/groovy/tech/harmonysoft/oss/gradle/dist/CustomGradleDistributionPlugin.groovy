@@ -280,6 +280,9 @@ class CustomGradleDistributionPlugin implements Plugin<Project> {
                 throw new IllegalStateException(buffer.toString())
             }
             def include = new File(includeRootDir, "${replacement}.gradle")
+            if (!include.file) {
+                include = new File(includeRootDir, "${replacement}.gradle.kts")
+            }
             if (include.file) {
                 ongoingReplacements.push(replacement)
                 def result = expand(project,
