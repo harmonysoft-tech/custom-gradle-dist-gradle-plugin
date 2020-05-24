@@ -1,5 +1,8 @@
 ## Releases
 
+**v.1.7**
+* [Support kotlin includes](https://github.com/denis-zhdanov/custom-gradle-dist-gradle-plugin/issues/1)
+
 **v.1.6**
 * fixed a bug with custom Gradle distribution file lock which resulted in an inability to build under Windows
 

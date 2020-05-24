@@ -1,1 +1,4 @@
 ./gradlew publishPlugins
+./gradlew uploadArchives
+./gradlew closeAndReleaseRepository
+./gradlew bintrayUpload
