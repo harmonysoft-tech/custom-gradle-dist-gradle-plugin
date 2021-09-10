@@ -17,6 +17,7 @@ class CustomGradleDistExtension {
     String customDistributionName
     String customDistributionVersion
     String gradleDistributionType = 'bin'
+    List<String> skipContentExpansionFor = new ArrayList<>()
     def rootUrlMapper = { version, type ->
         return "https://services.gradle.org/distributions/gradle-$version-${type}.zip"
     }
@@ -89,7 +90,7 @@ class CustomGradleDistributionPlugin implements Plugin<Project> {
     private static Collection<String> getDistributions(Project project) {
         def extensionRootDir = getExtensionsRootDir(project)
         def childDirectories = extensionRootDir.listFiles({ it.directory } as FileFilter)
-        if (childDirectories == null || childDirectories.length == 0) {
+        if (childDirectories == null || childDirectories.length < 2) {
             project.logger.lifecycle('Using a single custom gradle distribution')
             return []
         } else {
@@ -129,8 +130,8 @@ class CustomGradleDistributionPlugin implements Plugin<Project> {
             if (!archiveDir.directory) {
                 boolean ok = archiveDir.mkdirs()
                 if (!ok) {
-                    throw new IllegalStateException("Can't create directory $archiveDir.absolutePath to store "
-                            + "gradle distribution")
+                    throw new IllegalStateException("Can't create directory $archiveDir.absolutePath to store " +
+                            "gradle distribution")
                 }
             }
             download(project,
@@ -150,10 +151,12 @@ class CustomGradleDistributionPlugin implements Plugin<Project> {
         project.logger.lifecycle("Downloaded a gradle distribution from $fromUrl to $toFile.absolutePath")
     }
 
-    private static void prepareCustomDistribution(String distribution,
-                                                  File baseDistribution,
-                                                  Project project,
-                                                  CustomGradleDistExtension extension)
+    private static void prepareCustomDistribution(
+        String distribution,
+        File baseDistribution,
+        Project project,
+        CustomGradleDistExtension extension
+    )
     {
         def gradlePart = "gradle-$extension.gradleVersion"
         def customProjectPart = "$extension.customDistributionName-$extension.customDistributionVersion"
@@ -165,7 +168,7 @@ class CustomGradleDistributionPlugin implements Plugin<Project> {
         File result = new File(customDistributionsDir, customDistributionFileName)
 
         copyBaseDistribution(baseDistribution, result)
-        addToZip(result, distribution, project, extension.gradleVersion)
+        addToZip(result, distribution, project, extension.gradleVersion, extension.skipContentExpansionFor)
         project.logger.lifecycle("Prepared custom gradle distribution at $result.absolutePath")
     }
 
@@ -177,8 +180,8 @@ class CustomGradleDistributionPlugin implements Plugin<Project> {
             from.close()
             to.close()
         } catch (Exception e) {
-            throw new BuildException("Failed to copy base gradle distribution from $baseDistribution.absolutePath "
-                    + "to $customDistribution.absolutePath", e)
+            throw new BuildException("Failed to copy base gradle distribution from $baseDistribution.absolutePath " +
+                    "to $customDistribution.absolutePath", e)
         }
     }
 
@@ -200,65 +203,113 @@ class CustomGradleDistributionPlugin implements Plugin<Project> {
         }
     }
 
-    private static void addToZip(File zip, String distribution, Project project, String gradleVersion) {
+    private static void addToZip(
+            File zip,
+            String distribution,
+            Project project,
+            String gradleVersion,
+            Collection<String> pathsToExcludeFromContentExpansion
+    ) {
         try {
-            doAddToZip(zip, distribution, project, gradleVersion)
+            doAddToZip(zip, distribution, project, gradleVersion, pathsToExcludeFromContentExpansion)
         } catch (Exception e) {
             throw new BuildException("Failed to add entries to the custom gradle distribution $zip.absolutePath", e)
         }
     }
 
-    private static void doAddToZip(File zip, String distribution, Project project, String gradleVersion) {
+    private static void doAddToZip(
+            File zip,
+            String distribution,
+            Project project,
+            String gradleVersion,
+            Collection<String> pathsToExcludeFromContentExpansion
+    ) {
         def extensionsRootDir = getExtensionsRootDir(project)
         def zipFileSystem = FileSystems.newFileSystem(URI.create("jar:${zip.toPath().toUri()}"), ['create': 'true'])
         if (distribution == null) {
-            addToZip(zipFileSystem, extensionsRootDir, project, gradleVersion)
+            addToZip(zipFileSystem, extensionsRootDir, project, gradleVersion, pathsToExcludeFromContentExpansion)
         } else {
-            addToZip(zipFileSystem, new File(extensionsRootDir, distribution), project, gradleVersion)
+            addToZip(
+                zipFileSystem,
+                new File(extensionsRootDir, distribution),
+                project,
+                gradleVersion,
+                pathsToExcludeFromContentExpansion
+            )
         }
         zipFileSystem.close()
     }
 
-    private static void addToZip(FileSystem zip, File includeRootDir, Project project, String gradleVersion) {
-        addDirectoryToZip(zip, includeRootDir, includeRootDir, project, gradleVersion)
+    private static void addToZip(
+            FileSystem zip,
+            File includeRootDir,
+            Project project,
+            String gradleVersion,
+            Collection<String> pathsToExcludeFromContentExpansion
+    ) {
+        addDirectoryToZip(
+            zip,
+            includeRootDir,
+            includeRootDir,
+            project,
+            gradleVersion,
+            pathsToExcludeFromContentExpansion
+        )
     }
 
-    private static void addDirectoryToZip(FileSystem zip,
-                                          File includeRootDir,
-                                          File directoryToInclude,
-                                          Project project,
-                                          String gradleVersion)
-    {
+    private static void addDirectoryToZip(
+        FileSystem zip,
+        File includeRootDir,
+        File directoryToInclude,
+        Project project,
+        String gradleVersion,
+        Collection<String> pathsToExcludeFromContentExpansion
+    ) {
         def children = directoryToInclude.listFiles()
         for (File child : children ) {
             if (child.directory) {
-                addDirectoryToZip(zip, includeRootDir, child, project, gradleVersion)
+                addDirectoryToZip(zip, includeRootDir, child, project, gradleVersion, pathsToExcludeFromContentExpansion)
             } else {
-                addFileToZip(zip, includeRootDir, child, project, gradleVersion)
+                addFileToZip(zip, includeRootDir, child, project, gradleVersion, pathsToExcludeFromContentExpansion)
             }
         }
     }
 
-    private static void addFileToZip(FileSystem zip,
-                                     File includeRootDir,
-                                     File fileToInclude,
-                                     Project project,
-                                     String gradleVersion)
-    {
+    private static void addFileToZip(
+        FileSystem zip,
+        File includeRootDir,
+        File fileToInclude,
+        Project project,
+        String gradleVersion,
+        Collection<String> pathsToExcludeFromContentExpansion
+    ) {
         def relativePath = fileToInclude.absolutePath.substring(includeRootDir.absolutePath.length())
         def to = zip.getPath("gradle-$gradleVersion/init.d/$relativePath")
         if (to.parent != null) {
             Files.createDirectories(to.parent)
         }
-        Files.copy(applyTemplates(fileToInclude, project).toPath(), to)
+
+        def exclusionRule = pathsToExcludeFromContentExpansion.find {
+            def ruleRoot = new File(includeRootDir, it)
+            fileToInclude.canonicalPath.startsWith(ruleRoot.canonicalPath)
+        }
+        if (exclusionRule == null) {
+            Files.copy(applyTemplates(fileToInclude, project).toPath(), to)
+        } else {
+            project.logger.lifecycle(
+                "Skipped content expansion for file $relativePath because of exclusion rule '$exclusionRule'"
+            )
+            Files.copy(fileToInclude.toPath(), to)
+        }
+
         project.logger.lifecycle("Added $fileToInclude.absolutePath to the custom gradle distribution")
     }
 
     private static File applyTemplates(File file, Project project) {
         def includeRootDir = getIncludeRootDir(project)
         if (!includeRootDir.directory) {
-            project.logger.lifecycle("Skipped includes replacement - no 'include' directory is found "
-                    + "at $includeRootDir.absolutePath")
+            project.logger.lifecycle("Skipped includes replacement - no 'include' directory is found " +
+                    "at $includeRootDir.absolutePath")
             return file
         }
         def ongoingReplacements = new Stack<String>()

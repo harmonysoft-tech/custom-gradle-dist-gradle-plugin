@@ -1,15 +1,14 @@
 package tech.harmonysoft.oss.gradle.dist
 
-
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.Test
 
 import java.nio.charset.StandardCharsets
-import java.nio.file.FileSystem
-import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.stream.Stream
 import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
 
 import static java.util.function.Function.identity
@@ -94,6 +93,42 @@ gradleDist {
 """)
     }
 
+    @Test
+    void 'when there is an exclusion rule for a nested path then it is respected'() {
+        doTest('expansion-filter-nested-path', """
+plugins {
+    id 'tech.harmonysoft.oss.custom-gradle-dist-plugin'
+}
+
+gradleDist {
+    gradleVersion = '$GRADLE_VERSION'
+    customDistributionVersion = '$PROJECT_VERSION'
+    customDistributionName = '$PROJECT_NAME'
+    skipContentExpansionFor = [
+      'bin'
+    ]
+}
+""")
+    }
+
+    @Test
+    void 'when there is an exclusion rule for a root path then it is respected'() {
+        doTest('expansion-filter-root-path', """
+plugins {
+    id 'tech.harmonysoft.oss.custom-gradle-dist-plugin'
+}
+
+gradleDist {
+    gradleVersion = '$GRADLE_VERSION'
+    customDistributionVersion = '$PROJECT_VERSION'
+    customDistributionName = '$PROJECT_NAME'
+    skipContentExpansionFor = [
+      '.'
+    ]
+}
+""")
+    }
+
     private void doTest(String testName) {
         doTest(testName, BUILD_TEMPLATE)
     }
@@ -101,11 +136,11 @@ gradleDist {
     private void doTest(String testName, String buildGradleContent) {
         def testFiles = prepareInput(testName, buildGradleContent)
         GradleRunner.create()
-                    .withProjectDir(testFiles.inputRootDir)
-                    .withArguments('build', '--stacktrace')
-                    .withPluginClasspath()
-                    .withDebug(true)
-                    .build()
+            .withProjectDir(testFiles.inputRootDir)
+            .withArguments('build', '--stacktrace')
+            .withPluginClasspath()
+            .withDebug(true)
+            .build()
         verify(testFiles.expectedRootDir, new File(testFiles.inputRootDir, 'build/gradle-dist'))
     }
 
@@ -164,16 +199,21 @@ gradleDist {
         def expectedDistributions = expectedRootDir.listFiles(filter)
         if (expectedDistributions.length < 2) {
             assertEquals(actualDistDir.list().length, 1)
-            verify(new File(expectedRootDir, 'init.d'), getZipFs(actualDistDir, null))
+            verifyContentTheSame(
+                new File(expectedRootDir, 'init.d').toPath(),
+                unzip(actualDistDir, null).toPath()
+            )
         } else {
             for (expectedDistributionRootDir in expectedDistributions) {
-                verify(new File(expectedDistributionRootDir, 'init.d'),
-                       getZipFs(actualDistDir, expectedDistributionRootDir.name))
+                verifyContentTheSame(
+                    new File(expectedDistributionRootDir, 'init.d').toPath(),
+                    unzip(actualDistDir, expectedDistributionRootDir.name).toPath()
+                )
             }
         }
     }
 
-    private static FileSystem getZipFs(File parentDir, String distribution) {
+    private static File unzip(File parentDir, String distribution) {
         def zipName = "gradle-$GRADLE_VERSION-$PROJECT_NAME-$PROJECT_VERSION"
         if (distribution != null) {
             zipName += "-$distribution"
@@ -181,21 +221,35 @@ gradleDist {
         zipName += '.zip'
         def zip = new  File(parentDir, zipName)
         assertTrue("Expected to find a custom distribution at $zip.absolutePath but it's not there", zip.file)
-        return FileSystems.newFileSystem(URI.create("jar:${zip.toPath().toUri()}"), ['create': 'false'])
+        def rootUnzipDir = Files.createTempDirectory(zipName).toFile()
+        def zipFile = new ZipFile(zip)
+        zipFile.entries().each { zipEntry ->
+            def path = new File(rootUnzipDir, zipEntry.name).toPath()
+            if(zipEntry.directory){
+                Files.createDirectories(path)
+            }
+            else {
+                def p = path.getParent()
+                if (!Files.exists(p)) {
+                    Files.createDirectories(p)
+                }
+                Files.copy(zipFile.getInputStream(zipEntry), path)
+            }
+        }
+        def result = new File(rootUnzipDir, "gradle-$GRADLE_VERSION/init.d")
+        assertTrue("Expected to find custom distribution content at $result.absolutePath but it's not there",
+            result.directory)
+        return result
     }
 
-    private static void verify(File expectedDir, FileSystem zipFs) {
-        verify(expectedDir, zipFs.getPath("gradle-$GRADLE_VERSION/init.d"))
-    }
-
-    private static void verify(File expectedDir, Path actualDir) {
+    private static void verifyContentTheSame(Path expectedRoot, Path actualRoot) {
         def keyExtractor = { Path path ->
             def pathAsString = path.toString()
             def i = pathAsString.indexOf('init.d')
             return pathAsString.substring(i + 'init.d/'.length())
         }
-        Map<String, Path> allExpected = Files.list(expectedDir.toPath()).collect(toMap(keyExtractor, identity()))
-        Map<String, Path> allActual = Files.list(actualDir).collect(toMap(keyExtractor, identity()))
+        Map<String, Path> allExpected = listFiles(expectedRoot).collect(toMap(keyExtractor, identity()))
+        Map<String, Path> allActual = listFiles(actualRoot).collect(toMap(keyExtractor, identity()))
 
         if (allExpected.size() != allActual.size()) {
             def unexpected = new HashSet(allActual.keySet())
@@ -221,6 +275,23 @@ gradleDist {
                 assertEquals("Text mismatch in $path", expectedText, actualText)
             }
         }
+    }
+
+    private static Stream<Path> listFiles(Path path) {
+        List<Path> result = new ArrayList<>()
+        Stack<Path> toProcess = new Stack<>()
+        toProcess.push(path)
+        while (!toProcess.isEmpty()) {
+            Path p = toProcess.pop()
+            if (p.toFile().isDirectory()) {
+                Files.list(p).forEach {
+                    toProcess.push(it)
+                }
+            } else {
+                result.add(p)
+            }
+        }
+        return result.stream()
     }
 
     private static class TestFiles {

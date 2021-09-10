@@ -59,6 +59,31 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
      
      *optional settings:*
      * *gradleDistributionType* - allows to specify base Gradle distribution type. *'bin'* and *'all'* [are available](https://docs.gradle.org/current/userguide/gradle_wrapper.html#sec:adding_wrapper), *'bin'* is used by default  
+     * *skipContentExpansionFor* - the plugin by default expands content of the files included into custom Gradle distribution by default (see below). That might cause a problem if we want to add some binary file like `*.jar` or `*.so`. This property holds an array of root paths relative to `init.d` which content shouldn't be expanded.  
+       Example: consider the following project structure:
+       ```
+       init.d
+         |__my.gradle
+         |
+         |__bin
+             |
+             |__profiler
+                   |
+                   |__agent.jar
+                         |
+                         |__linux-x64
+                               |
+                               |__agentti.so
+       ```
+       Here we want to expand content for `my.gradle`, but don't touch `bin/profiler/agent.jar` and `bin/profiler/linux-x64/agentti.so`. We can configure it as below:
+       ```
+       gradleDist {
+         ...
+         skipContentExpansionFor: [
+           'bin/profiler'
+         ]
+       }
+       ```
      * *rootUrlMapper* - a function which allows to build an url to the root base Gradle distribution path. This property is convenient in restricted environments where *https://service.gradle.org* is unavailable. We can deploy target Gradle distribution to a server inside the private network and use it as a base for our custom Gradle distributions. The function receives the following arguments:  
        * *version* - target base Gradle distribution version, e.g. *5.1*
        * *type* - target base Gradle distribution type, e.g. *bin*  
