@@ -88,7 +88,7 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
        * *version* - target base Gradle distribution version, e.g. *5.1*
        * *type* - target base Gradle distribution type, e.g. *bin*  
        
-       Following implementation us used by default:  
+       Following implementation is used by default:  
        `return "https://services.gradle.org/distributions/gradle-$version-${type}.zip"` 
      
     Resulting *build.gradle* might look like below:  

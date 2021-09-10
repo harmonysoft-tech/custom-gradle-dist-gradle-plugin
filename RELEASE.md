@@ -1,5 +1,8 @@
 ## Releases
 
+**v.1.8**
+* [Allow to exclude files from content expansion](https://github.com/denis-zhdanov/custom-gradle-dist-gradle-plugin/issues/2)
+
 **v.1.7**
 * [Support kotlin includes](https://github.com/denis-zhdanov/custom-gradle-dist-gradle-plugin/issues/1)
 
