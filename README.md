@@ -51,61 +51,61 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
         id 'tech.harmonysoft.oss.custom-gradle-dist-plugin' version '1.6'
     }
     ```
- 3. Specify target settings in the `gradleDist {}` block.  
-     *mandatory settings:*
-     * *gradleVersion* - base Gradle wrapper version
-     * *customDistributionName* - a unique identifier for the custom Gradle distribution
-     * *customDistributionVersion* - custom distribution version
+3. Specify target settings in the `gradleDist {}` block.  
+    *mandatory settings:*
+    * *gradleVersion* - base Gradle wrapper version
+    * *customDistributionName* - a unique identifier for the custom Gradle distribution
+    * *customDistributionVersion* - custom distribution version
      
-     *optional settings:*
-     * *gradleDistributionType* - allows to specify base Gradle distribution type. *'bin'* and *'all'* [are available](https://docs.gradle.org/current/userguide/gradle_wrapper.html#sec:adding_wrapper), *'bin'* is used by default  
-     * *skipContentExpansionFor* - the plugin by default expands content of the files included into custom Gradle distribution by default (see below). That might cause a problem if we want to add some binary file like `*.jar` or `*.so`. This property holds an array of root paths relative to `init.d` which content shouldn't be expanded.  
-       Example: consider the following project structure:
-       ```
-       init.d
-         |__my.gradle
-         |
-         |__bin
-             |
-             |__profiler
-                   |
-                   |__agent.jar
-                         |
-                         |__linux-x64
-                               |
-                               |__agentti.so
-       ```
-       Here we want to expand content for `my.gradle`, but don't touch `bin/profiler/agent.jar` and `bin/profiler/linux-x64/agentti.so`. We can configure it as below:
-       ```
-       gradleDist {
-         ...
-         skipContentExpansionFor: [
-           'bin/profiler'
-         ]
-       }
-       ```
-     * *rootUrlMapper* - a function which allows to build an url to the root base Gradle distribution path. This property is convenient in restricted environments where *https://service.gradle.org* is unavailable. We can deploy target Gradle distribution to a server inside the private network and use it as a base for our custom Gradle distributions. The function receives the following arguments:  
-       * *version* - target base Gradle distribution version, e.g. *5.1*
-       * *type* - target base Gradle distribution type, e.g. *bin*  
+    *optional settings:*
+    * *gradleDistributionType* - allows to specify base Gradle distribution type. *'bin'* and *'all'* [are available](https://docs.gradle.org/current/userguide/gradle_wrapper.html#sec:adding_wrapper), *'bin'* is used by default  
+    * *skipContentExpansionFor* - the plugin by default expands content of the files included into custom Gradle distribution by default (see below). That might cause a problem if we want to add some binary file like `*.jar` or `*.so`. This property holds an array of root paths relative to `init.d` which content shouldn't be expanded.  
+      Example: consider the following project structure:
+      ```
+      init.d
+        |__my.gradle
+        |
+        |__bin
+            |
+            |__profiler
+                  |
+                  |__agent.jar
+                        |
+                        |__linux-x64
+                              |
+                              |__agentti.so
+      ```
+      Here we want to expand content for `my.gradle`, but don't touch `bin/profiler/agent.jar` and `bin/profiler/linux-x64/agentti.so`. We can configure it as below:
+      ```
+      gradleDist {
+        ...
+        skipContentExpansionFor: [
+          'bin/profiler'
+        ]
+      }
+      ```
+    * *rootUrlMapper* - a function which allows to build an url to the root base Gradle distribution path. This property is convenient in restricted environments where *https://service.gradle.org* is unavailable. We can deploy target Gradle distribution to a server inside the private network and use it as a base for our custom Gradle distributions. The function receives the following arguments:  
+      * *version* - target base Gradle distribution version, e.g. *5.1*
+      * *type* - target base Gradle distribution type, e.g. *bin*  
        
-       Following implementation is used by default:  
-       `return "https://services.gradle.org/distributions/gradle-$version-${type}.zip"` 
+      Following implementation is used by default:  
+      `return "https://services.gradle.org/distributions/gradle-$version-${type}.zip"` 
      
-    Resulting *build.gradle* might look like below:  
-    ```groovy
-    plugins {
-        id 'tech.harmonysoft.oss.custom-gradle-dist-plugin' version '1.6'
-    }
+   Resulting *build.gradle* might look like below:  
+   ```groovy
+   plugins {
+       id 'tech.harmonysoft.oss.custom-gradle-dist-plugin' version '1.6'
+   }
     
-    gradleDist {
-        gradleVersion = '4.10'
-        customDistributionVersion = '1.0'
-        customDistributionName = 'my-project'
-    }
-    ```
+   gradleDist {
+       gradleVersion = '4.10'
+       customDistributionVersion = '1.0'
+       customDistributionName = 'my-project'
+   }
+   ```
 4. Define common setup to be included to the custom Gradle distribution in the project's *src/main/resources/init.d* directory  
     
-    Note that the plugin supports simple text processing engine - it's possible to put utility scripts to the *src/main/resources/include*. Their content is applied to files from *src/main/resources/init.d* using `$utility-script-name$` syntax.  
+    Note that the plugin supports simple text processing engine - it's possible to put utility scripts in *src/main/resources/include*. Their content is applied to files from *src/main/resources/init.d* using `$utility-script-name$` syntax.  
     
     For example we can have a file *src/main/resources/init.d/setup.gradle*:  
     ```groovy
@@ -139,7 +139,13 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
         compile 'com.fasterxml.jackson.module:jackson-module-kotlin:2.9.6'  
     }
     ```  
+    It is also possible to define multiple replacement rules within a single file. In this case the file must use the *.properties* extension and the replacement identifier must be globally unique, for example:
     
+   ```
+   junitJupiterVersion = 5.0
+   springbootVersion = 2.4.3
+    ```
+
     Note that text processing might be nested, i.e. files from *src/main/resources/include* might refer to another files from the same directory through the `$file-name$` syntax.
     
     There is an alternative setup where we want to produce more than one Gradle wrapper distribution (e.g. '*android*' and '*server*'). In this situation corresponding directories should be done in the *src/main/resources/init.d*:  
@@ -164,7 +170,7 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
                |__ gradle-4.10-my-project-1.0-server.zip
     ```
     
-5. Build Gradle distribution(s)
+6. Build Gradle distribution(s)
 
     ```
     ./gradlew build

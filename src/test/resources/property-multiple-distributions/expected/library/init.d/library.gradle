@@ -1,0 +1,25 @@
+allprojects {
+    apply plugin: 'java'
+
+    group 'org.my'
+
+    def minorVersionToUse = project.hasProperty('minorVersion') ? minorVersion : '1'
+    version = "$baseVersion.$minorVersionToUse"
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'org.springframework.boot:spring-boot-web-starter:2.7.0'
+    }
+
+    jar {
+        manifest {
+            attributes(
+                    'Implementation-Version': "$version",
+                    'Built-Date': new Date().format("dd-MM-yyyy")
+            )
+        }
+    }
+}

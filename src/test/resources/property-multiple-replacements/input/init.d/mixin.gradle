@@ -1,0 +1,7 @@
+initscript {
+    junitVersion = $junitVersion$
+}
+
+allprojects {
+    junitVersion = $junitVersion$
+}

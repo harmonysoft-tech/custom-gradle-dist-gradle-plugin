@@ -64,6 +64,40 @@ gradleDist {
     }
 
     @Test
+    void 'when client project has a single property, single distribution and single replacement then it is correctly packaged'() {
+        doTest('property-single-replacement')
+    }
+
+    @Test
+    void 'when client project has a single property, single distribution and multiple replacements then it is correctly packaged'() {
+        doTest('property-multiple-replacements')
+    }
+
+    @Test
+    void 'when client project has a single property and nested replacements then it is correctly packaged'() {
+        doTest('property-nested-expansion')
+    }
+
+    @Test
+    void 'when client project has multiple properties and multiple distributions then it is correctly packaged'() {
+        doTest('property-multiple-distributions')
+    }
+
+    @Test
+    void 'when a property and an include file have the same identifier then it is reported'() {
+        def expectedError = 'duplicate identifier detected'
+        def errorMessage = "Expected to get an exception with problem details when duplicate identifier " +
+                "is detected - '$expectedError'"
+        try {
+            doTest('property-duplicate-identifier')
+            fail(errorMessage)
+        } catch (e) {
+            assertTrue("$errorMessage. Got the following instead: '${e.message}'",
+                    e.message.contains(expectedError))
+        }
+    }
+
+    @Test
     void 'when cyclic expansion chain is detected then it is reported'() {
         def expectedError = 'detected a cyclic text expansion sequence'
         def errorMessage = "Expected to get an exception with problem details when cyclic replacements chain " +

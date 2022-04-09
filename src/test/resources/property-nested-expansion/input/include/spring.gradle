@@ -1,0 +1,2 @@
+compile 'org.springframework.boot:spring-boot-starter-log4j2:$spring-version$'
+compile 'org.springframework.boot:spring-boot-starter-data-mongodb:$spring-version$'

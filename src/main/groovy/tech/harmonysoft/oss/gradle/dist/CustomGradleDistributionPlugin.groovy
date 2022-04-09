@@ -312,11 +312,13 @@ class CustomGradleDistributionPlugin implements Plugin<Project> {
                     "at $includeRootDir.absolutePath")
             return file
         }
+
+        def properties = readProperties(includeRootDir)
         def ongoingReplacements = new Stack<String>()
         List<Map<String, String>> includesRef = []
         def includes = new HashMap<String, String>().withDefault { replacement ->
             if (ongoingReplacements.contains(replacement)) {
-                def buffer = new StringBuilder('Can not create custom Gradle distribution - detected a cyclic text ' +
+                def buffer = new StringBuilder('Cannot create custom Gradle distribution - detected a cyclic text ' +
                                                        'expansion sequence:\n')
                 def replacementsList = ongoingReplacements.toList()
                 replacementsList.add(replacement)
@@ -330,11 +332,17 @@ class CustomGradleDistributionPlugin implements Plugin<Project> {
                 }
                 throw new IllegalStateException(buffer.toString())
             }
+
             def include = new File(includeRootDir, "${replacement}.gradle")
             if (!include.file) {
                 include = new File(includeRootDir, "${replacement}.gradle.kts")
             }
             if (include.file) {
+
+                if (properties.containsKey(replacement)) {
+                    throw new IllegalStateException("Cannot create custom Gradle distribution - duplicate identifier detected: ${replacement}\n")
+                }
+
                 ongoingReplacements.push(replacement)
                 def result = expand(project,
                                     file,
@@ -342,10 +350,21 @@ class CustomGradleDistributionPlugin implements Plugin<Project> {
                                     new String(Files.readAllBytes(include.toPath()), StandardCharsets.UTF_8))
                 ongoingReplacements.pop()
                 return result
-            } else {
+            }
+            if (properties.containsKey(replacement)) {
+                ongoingReplacements.push(replacement)
+                def result = expand(project,
+                        file,
+                        includesRef[0],
+                        properties[replacement])
+                ongoingReplacements.pop()
+                return result
+            }
+            else {
                 return null
             }
         }
+
         includesRef.add(includes)
 
         def text = new String(Files.readAllBytes(file.toPath()))
@@ -405,5 +424,18 @@ class CustomGradleDistributionPlugin implements Plugin<Project> {
             firstLine = false
         }
         return buffer.toString()
+    }
+
+    private static HashMap<String, String> readProperties(File rootIncludeDir) {
+        def values = new HashMap<String, String>()
+        rootIncludeDir
+                .listFiles({ it.name.endsWith(".properties") } as FileFilter)
+                .each { file ->
+                    file.eachLine { line ->
+                        def tokens = line.split("=")
+                        values.put(tokens[0].trim(), tokens[1].trim())
+                    }
+                }
+        return values
     }
 }

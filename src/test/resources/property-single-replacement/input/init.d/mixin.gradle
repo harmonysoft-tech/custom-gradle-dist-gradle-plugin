@@ -1,0 +1,3 @@
+initscript {
+    junitVersion = $junitVersion$
+}

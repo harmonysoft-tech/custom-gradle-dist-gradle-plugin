@@ -1,0 +1,7 @@
+initscript {
+    junitVersion = 5.7.2
+}
+
+allprojects {
+    junitVersion = 5.7.2
+}

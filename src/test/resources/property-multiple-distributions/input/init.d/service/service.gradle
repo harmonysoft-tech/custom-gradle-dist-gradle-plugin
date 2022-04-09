@@ -1,0 +1,17 @@
+initscript {
+    $repository$
+
+    dependencies {
+        classpath 'org.springframework.boot:spring-boot-gradle-plugin:$springGradleVersion$'
+    }
+}
+
+allprojects {
+    apply plugin: 'org.springframework.boot'
+    $common$
+
+    dependencies {
+        compile 'org.springframework.boot:spring-boot-starter-log4j2'
+        compile 'org.springframework.boot:spring-boot-starter-data-mongodb'
+    }
+}

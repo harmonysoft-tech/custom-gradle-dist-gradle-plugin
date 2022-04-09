@@ -1,0 +1,6 @@
+allprojects {
+    dependencies {
+        compile 'org.springframework.boot:spring-boot-starter-log4j2:5.7.2'
+        compile 'org.springframework.boot:spring-boot-starter-data-mongodb:5.7.2'
+    }
+}
