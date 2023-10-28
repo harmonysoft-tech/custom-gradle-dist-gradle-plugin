@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "tech.harmonysoft"
-version = "1.9"
+version = "1.9.0"
 
 gradlePlugin {
     website = "https://gradle-dist.oss.harmonysoft.tech/"
