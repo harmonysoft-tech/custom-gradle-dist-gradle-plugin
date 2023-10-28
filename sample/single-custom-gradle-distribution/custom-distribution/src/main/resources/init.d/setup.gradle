@@ -19,6 +19,4 @@ allprojects {
     group 'com.mycompany'
 
     sourceCompatibility = 21
-
-    $repository$
 }
