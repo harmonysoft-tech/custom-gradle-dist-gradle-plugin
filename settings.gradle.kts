@@ -1,0 +1,1 @@
+rootProject.name = "gradle-distribution-gradle-plugin"
