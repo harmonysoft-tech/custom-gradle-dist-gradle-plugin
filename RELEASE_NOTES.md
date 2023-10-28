@@ -1,3 +1,5 @@
+## v1.9 released on 28 Oct 2023 UTC
+  * b5b51506af0b4d62d605e51faf347aea3d7c2f1f bump version
 ## v1.8 released on 28 Oct 2023 UTC
   * ca751a2d6331d8b88f9ad3bd5ac74f07bab94763 re-write the plugin from groovy to kotlin
   * 561dc5a6d6a624e050fe9d0a6d124a43170e9629 #2 Allow to exclude files from content expansion
