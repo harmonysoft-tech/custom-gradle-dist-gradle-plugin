@@ -104,6 +104,7 @@ class CustomGradleDistributionPluginTest {
             }
             
             gradleDist {
+            
                 gradleVersion = "$GRADLE_VERSION"
                 customDistributionVersion = "$PROJECT_VERSION"
                 customDistributionName = "$PROJECT_NAME"
