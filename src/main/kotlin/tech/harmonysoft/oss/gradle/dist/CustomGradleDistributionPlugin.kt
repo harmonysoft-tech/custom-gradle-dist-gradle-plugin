@@ -229,7 +229,7 @@ class CustomGradleDistributionPlugin : Plugin<Project> {
             gradleVersion = extension.gradleVersion.get(),
             pathsToExcludeFromContentExpansion = extension.skipContentExpansionFor.get()
         )
-        project.logger.lifecycle("Prepared custom gradle distribution at $result.absolutePath")
+        project.logger.lifecycle("prepared custom gradle distribution at $result.absolutePath")
     }
 
     private fun copyBaseDistribution(baseDistribution: File, customDistribution: File) {
@@ -367,7 +367,7 @@ class CustomGradleDistributionPlugin : Plugin<Project> {
             Files.copy(fileToInclude.toPath(), to)
         }
 
-        project.logger.lifecycle("Added $fileToInclude.absolutePath to the custom gradle distribution")
+        project.logger.lifecycle("added $fileToInclude.absolutePath to the custom gradle distribution")
     }
 
     private fun applyTemplates(file: File, project: Project): File {

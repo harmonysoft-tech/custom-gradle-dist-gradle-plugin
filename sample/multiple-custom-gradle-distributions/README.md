@@ -2,6 +2,8 @@
 
 This is an example of using custom Gradle distributions for projects with different setup - we create *'library'* and *'service'* distributions and a sample project which uses *'service'*.
 
+**Note:** java 21 is required
+
 ## Custom Distributions
 
 [custom distribution](custom-distribution) project configures two custom Gradle distribution - [library](custom-distribution/src/main/resources/init.d/library/library.gradle) and [service](custom-distribution/src/main/resources/init.d/service/service.gradle). Both of them use [shared setup](custom-distribution/src/main/resources/include).  

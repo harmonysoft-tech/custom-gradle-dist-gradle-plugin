@@ -2,6 +2,8 @@
 
 This is an example of using custom Gradle distribution for projects with the same setup - we create a single custom distribution and use it everywhere.
 
+**Note:** java 21 is required
+
 ## Custom Distribution
 
 [custom-distribution](custom-distribution) project defines common distribution setup in the [setup.gradle](custom-distribution/src/main/resources/init.d).

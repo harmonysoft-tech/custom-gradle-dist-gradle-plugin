@@ -1,15 +1,24 @@
+initscript {
+    $repository$
+    dependencies {
+        classpath 'org.springframework.boot:spring-boot-gradle-plugin:3.1.5'
+        classpath 'io.spring.gradle:dependency-management-plugin:1.1.3'
+    }
+}
+
 allprojects {
-    apply plugin: 'java'
+    apply plugin: 'java-library'
+
+    // There is a known Gradle bug that non-bundled plugins can't be applied by id in init scripts.
+    // That's why we apply them by class name
+    apply plugin: org.springframework.boot.gradle.plugin.SpringBootPlugin
+    apply plugin: io.spring.gradle.dependencymanagement.DependencyManagementPlugin
+
+    $repository$
 
     group 'com.mycompany'
 
-    sourceCompatibility = 1.8
+    sourceCompatibility = 21
 
-    repositories {
-        mavenCentral()
-    }
-
-    dependencies {
-        testCompile 'junit:junit:4.12'
-    }
+    $repository$
 }

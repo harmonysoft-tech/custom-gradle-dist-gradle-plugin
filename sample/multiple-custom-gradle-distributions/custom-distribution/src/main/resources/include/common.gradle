@@ -1,8 +1,10 @@
-apply plugin: 'java'
+apply plugin: "java-library"
 
-group 'org.my'
+group "org.my"
 
 $repository$
+
+sourceCompatibility = 21
 
 jar {
     manifest {
