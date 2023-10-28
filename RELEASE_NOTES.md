@@ -1,3 +1,9 @@
+## v1.9.0 released on 28 Oct 2023 UTC
+  * 7c11d78e69ee2aa27a0bd3f4eb58b86cc3f6aabc use semver project version format
+  * 0cdd681fc2552450c56724056de85004f68ca238 #10 Add type of Gradle distribution to the custom distribution filename
+  * d8708d62fa3b69a94dfde9e606c9c7b5d8c36b66 corrected mandatory base gradle version property checking
+  * e7636ce33208de27afb9553bab63434f4e2b8613 remove duplication from sample project
+  * 00a632ac5a2f156daa2676456395a897398d204d updated samples to the latest java and spring as of Oct 2023
 ## v1.9 released on 28 Oct 2023 UTC
   * b5b51506af0b4d62d605e51faf347aea3d7c2f1f bump version
 ## v1.8 released on 28 Oct 2023 UTC
