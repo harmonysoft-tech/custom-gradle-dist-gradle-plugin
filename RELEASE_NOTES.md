@@ -1,3 +1,5 @@
+## v1.10.0 released on 28 Oct 2023 UTC
+  * 7cb062be426a1f0134c9f4e930620295ffcee9af dummy change to bump version
 ## v1.9.0 released on 28 Oct 2023 UTC
   * 7c11d78e69ee2aa27a0bd3f4eb58b86cc3f6aabc use semver project version format
   * 0cdd681fc2552450c56724056de85004f68ca238 #10 Add type of Gradle distribution to the custom distribution filename
