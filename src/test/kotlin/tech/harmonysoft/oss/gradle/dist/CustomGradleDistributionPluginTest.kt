@@ -112,11 +112,76 @@ class CustomGradleDistributionPluginTest {
         """.trimIndent())
     }
 
-    private fun doTest(testName: String) {
-        doTest(testName, BUILD_TEMPLATE)
+    @Test
+    fun `when custom single gradle distribution is built with default distribution type then it contains base distribution type`() {
+        val testFiles = doTest("single-distribution-no-templates")
+        val expectedCustomDistributionFile = File(
+            testFiles.inputRootDir,
+            "build/gradle-dist/gradle-$GRADLE_VERSION-$PROJECT_NAME-$PROJECT_VERSION-bin.zip"
+        )
+        verifyDistributionName(expectedCustomDistributionFile)
+        assertThat(expectedCustomDistributionFile).exists()
     }
 
-    private fun doTest(testName: String, buildGradleContent: String) {
+    @Test
+    fun `when custom single gradle distribution is built with non-default distribution type then it contains base distribution type`() {
+        val testFiles = doTest("single-distribution-no-templates", """
+            plugins {
+                id("tech.harmonysoft.oss.custom-gradle-dist-plugin")
+            }
+            
+            gradleDist {
+                gradleVersion = "$GRADLE_VERSION"
+                gradleDistributionType = "all"
+                customDistributionVersion = "$PROJECT_VERSION"
+                customDistributionName = "$PROJECT_NAME"
+            }
+        """.trimIndent())
+        val expectedCustomDistributionFile = File(
+            testFiles.inputRootDir,
+            "build/gradle-dist/gradle-$GRADLE_VERSION-$PROJECT_NAME-$PROJECT_VERSION-all.zip"
+        )
+        verifyDistributionName(expectedCustomDistributionFile)
+    }
+
+    private fun verifyDistributionName(expectedCustomDistributionFile: File) {
+        if (!expectedCustomDistributionFile.isFile) {
+            fail(
+                "expected custom distribution file ${expectedCustomDistributionFile.name} is not found at "
+                + "${expectedCustomDistributionFile.canonicalPath}, available file(s): "
+                + expectedCustomDistributionFile.parentFile.listFiles()?.joinToString { it.name }
+            )
+        }
+    }
+
+    @Test
+    fun `when multiple distributions are configured with non-default type then multiple distributions with correct names are created`() {
+        val testFiles = doTest("multiple-distributions", """
+            plugins {
+                id("tech.harmonysoft.oss.custom-gradle-dist-plugin")
+            }
+            
+            gradleDist {
+                gradleVersion = "$GRADLE_VERSION"
+                gradleDistributionType = "all"
+                customDistributionVersion = "$PROJECT_VERSION"
+                customDistributionName = "$PROJECT_NAME"
+            }
+        """.trimIndent())
+        for (distribution in listOf("library", "service")) {
+            val expectedCustomDistributionFile = File(
+                testFiles.inputRootDir,
+                "build/gradle-dist/gradle-$GRADLE_VERSION-$PROJECT_NAME-$PROJECT_VERSION-$distribution-all.zip"
+            )
+            verifyDistributionName(expectedCustomDistributionFile)
+        }
+    }
+
+    private fun doTest(testName: String): TestFiles {
+        return doTest(testName, BUILD_TEMPLATE)
+    }
+
+    private fun doTest(testName: String, buildGradleContent: String): TestFiles {
         val testFiles = prepareInput(testName, buildGradleContent)
         GradleRunner.create()
             .withProjectDir(testFiles.inputRootDir)
@@ -126,6 +191,7 @@ class CustomGradleDistributionPluginTest {
             .build()
 
         verify(testFiles.expectedRootDir, File(testFiles.inputRootDir, "build/gradle-dist"))
+        return testFiles
     }
 
     private fun prepareInput(testDirName: String, buildGradleContent: String): TestFiles {
@@ -241,18 +307,20 @@ class CustomGradleDistributionPluginTest {
     }
 
     private fun unzip(parentDir: File, distribution: String?): File {
-        val zipName = buildString {
-            append("gradle-$GRADLE_VERSION-$PROJECT_NAME-$PROJECT_VERSION")
-            if (distribution != null) {
-                append("-$distribution")
-            }
-            append(".zip")
+        val zips = parentDir.listFiles()?.filter { file ->
+            distribution?.let { file.name.contains("-$it") } ?: true
+            && file.name.endsWith(".zip")
+        } ?: fail(
+            "no zip files are found in the build dir ${parentDir.canonicalPath}"
+        )
+        if (zips.size != 1) {
+            fail(
+                "expected to find one custom gradle distribution zip file in ${parentDir.canonicalPath} "
+                + "but found ${zips.size}: ${zips.joinToString { it.name }}"
+            )
         }
-        val zip = File(parentDir, zipName)
-        assertThat(zip.isFile)
-            .describedAs("expected to find a custom distribution at $zip.absolutePath but it's not there")
-            .isTrue()
-        val rootUnzipDir = Files.createTempDirectory(zipName).toFile()
+        val zip = zips.first()
+        val rootUnzipDir = Files.createTempDirectory(zip.name).toFile()
         val zipFile = ZipFile(zip)
         for (zipEntry in zipFile.entries()) {
             val path = File(rootUnzipDir, zipEntry.name).toPath()

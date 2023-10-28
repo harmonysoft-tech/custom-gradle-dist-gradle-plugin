@@ -217,7 +217,7 @@ class CustomGradleDistributionPlugin : Plugin<Project> {
         if (distribution != null) {
             customProjectPart += "-$distribution"
         }
-        val customDistributionFileName = "$gradlePart-${customProjectPart}.zip"
+        val customDistributionFileName = "$gradlePart-${customProjectPart}-${extension.gradleDistributionType.get()}.zip"
         val customDistributionsDir = getCustomDistributionsRootDir(project)
         val result = File(customDistributionsDir, customDistributionFileName)
 
