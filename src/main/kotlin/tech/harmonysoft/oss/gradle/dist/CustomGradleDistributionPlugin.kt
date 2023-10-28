@@ -61,7 +61,7 @@ class CustomGradleDistributionPlugin : Plugin<Project> {
     }
 
     private fun validateGradleVersion(extension: CustomGradleDistExtension) {
-        if (!extension.gradleVersion.isPresent && extension.gradleVersion.get().isBlank()) {
+        if (!extension.gradleVersion.isPresent || extension.gradleVersion.get().isBlank()) {
             throw IllegalStateException(
                 """
                     can not build custom gradle distribution - base gradle version is undefined. Please specify it like below:
