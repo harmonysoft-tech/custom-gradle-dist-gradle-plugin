@@ -48,18 +48,18 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
 2. Register the plugin there:
     ```groovy
     plugins {
-        id 'tech.harmonysoft.oss.custom-gradle-dist-plugin' version '1.6'
+        id 'tech.harmonysoft.oss.custom-gradle-dist-plugin' version '1.11.0'
     }
     ```
  3. Specify target settings in the `gradleDist {}` block.  
      *mandatory settings:*
-     * *gradleVersion* - base Gradle wrapper version
-     * *customDistributionName* - a unique identifier for the custom Gradle distribution
-     * *customDistributionVersion* - custom distribution version
+     * `gradleVersion` - base Gradle wrapper version
+     * `customDistributionName` - a unique identifier for the custom Gradle distribution
+     * `customDistributionVersion` - custom distribution version
      
      *optional settings:*
-     * *gradleDistributionType* - allows to specify base Gradle distribution type. *'bin'* and *'all'* [are available](https://docs.gradle.org/current/userguide/gradle_wrapper.html#sec:adding_wrapper), *'bin'* is used by default  
-     * *skipContentExpansionFor* - the plugin by default expands content of the files included into custom Gradle distribution by default (see below). That might cause a problem if we want to add some binary file like `*.jar` or `*.so`. This property holds an array of root paths relative to `init.d` which content shouldn't be expanded.  
+     * `gradleDistributionType` - allows to specify base Gradle distribution type. *'bin'* and *'all'* [are available](https://docs.gradle.org/current/userguide/gradle_wrapper.html#sec:adding_wrapper), *'bin'* is used by default  
+     * `skipContentExpansionFor` - the plugin by default expands content of the files included into custom Gradle distribution by default (see below). That might cause a problem if we want to add some binary file like `*.jar` or `*.so`. This property holds an array of root paths relative to `init.d` which content shouldn't be expanded.  
        Example: consider the following project structure:
        ```
        init.d
@@ -84,9 +84,9 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
          ]
        }
        ```
-     * *rootUrlMapper* - a function which allows to build an url to the root base Gradle distribution path. This property is convenient in restricted environments where *https://service.gradle.org* is unavailable. We can deploy target Gradle distribution to a server inside the private network and use it as a base for our custom Gradle distributions. The function receives the following arguments:  
-       * *version* - target base Gradle distribution version, e.g. *5.1*
-       * *type* - target base Gradle distribution type, e.g. *bin*  
+     * `rootUrlMapper` - a function which allows to build an url to the root base Gradle distribution path. This property is convenient in restricted environments where *https://service.gradle.org* is unavailable. We can deploy target Gradle distribution to a server inside the private network and use it as a base for our custom Gradle distributions. The function receives the following arguments:  
+       * `version` - target base Gradle distribution version, e.g. *5.1*
+       * `type` - target base Gradle distribution type, e.g. `bin`  
        
        Following implementation is used by default:  
        `return "https://services.gradle.org/distributions/gradle-$version-${type}.zip"` 
@@ -94,7 +94,7 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
     Resulting *build.gradle* might look like below:  
     ```groovy
     plugins {
-        id 'tech.harmonysoft.oss.custom-gradle-dist-plugin' version '1.6'
+        id 'tech.harmonysoft.oss.custom-gradle-dist-plugin' version '1.11.0'
     }
     
     gradleDist {
@@ -107,7 +107,7 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
     
     Note that the plugin supports simple text processing engine - it's possible to put utility scripts to the *src/main/resources/include*. Their content is applied to files from *src/main/resources/init.d* using `$utility-script-name$` syntax.  
     
-    For example we can have a file *src/main/resources/init.d/setup.gradle*:  
+    For example, we can have a file *src/main/resources/init.d/setup.gradle*:  
     ```groovy
     allprojects {
         $dependencies$
@@ -167,7 +167,7 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
 5. Build Gradle distribution(s)
 
     ```
-    ./gradlew build
+    ./gradlew buildGradleDist
     ```
     
     The distribution(s) are located in the *build/gradle-dist*
