@@ -14,17 +14,17 @@ bootRun {
  
 ## Problem
  
- Gradle scripts quite often contain duplicate parts, that's especially true for micro-service architecture where there are many small servers and each of them has its own configuration.
+ Gradle scripts quite often contain duplicate parts, that's especially true for micro-service architecture where there are many small servers and each of them has its own repository.
    
- One solution to that is putting common parts to a Gradle plugin. However, such extension would be specific to particular company and is unlikely going to the Gradle plugin repository (to allow [shorthand access](https://docs.gradle.org/current/userguide/plugins.html#sec:plugins_block)).  
+ One solution to that is putting common parts to a Gradle plugin. However, such extension would be specific to particular company and is unlikely to go to the Gradle plugin repository (to allow [shorthand access](https://docs.gradle.org/current/userguide/plugins.html#sec:plugins_block)).  
  That means that it still would be necessary to have a setup like below in every project:  
  ```groovy
  buildscript {
      repositorirs {
          maven {
-             url 'http://artifactory.mycompany.com/external-dependencies-repo'
+             url 'http://artifactory.mycompany.com/internalo'
          }
-         classpath 'com.mycompany:gradle-plugin:1.0.0'
+         classpath 'com.mycompany:gradle-plugin:3.2.1'
      }
  }
  
@@ -58,8 +58,8 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
      * `customDistributionVersion` - custom distribution version
      
      *optional settings:*
-     * `gradleDistributionType` - allows to specify base Gradle distribution type. *'bin'* and *'all'* [are available](https://docs.gradle.org/current/userguide/gradle_wrapper.html#sec:adding_wrapper), *'bin'* is used by default  
-     * `skipContentExpansionFor` - the plugin by default expands content of the files included into custom Gradle distribution by default (see below). That might cause a problem if we want to add some binary file like `*.jar` or `*.so`. This property holds an array of root paths relative to `init.d` which content shouldn't be expanded.  
+     * `gradleDistributionType` - allows to specify base Gradle distribution type. `bin` and `all` [are available](https://docs.gradle.org/current/userguide/gradle_wrapper.html#sec:adding_wrapper) at the moment, `bin` is used by default  
+     * `skipContentExpansionFor` - the plugin by default expands content of the files included into custom Gradle distribution by default (see below). That might cause a problem if we want to add some binary file like `*.jar` or `*.so`. This property holds a list of root paths relative to `init.d` which content shouldn't be expanded.  
        Example: consider the following project structure:
        ```
        init.d
@@ -79,17 +79,15 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
        ```
        gradleDist {
          ...
-         skipContentExpansionFor: [
-           'bin/profiler'
-         ]
+         skipContentExpansionFor = listOf("bin/profiler")
        }
        ```
-     * `rootUrlMapper` - a function which allows to build an url to the root base Gradle distribution path. This property is convenient in restricted environments where *https://service.gradle.org* is unavailable. We can deploy target Gradle distribution to a server inside the private network and use it as a base for our custom Gradle distributions. The function receives the following arguments:  
+     * `rootUrlMapper` - a function which allows to build an url to the root base Gradle distribution path. This property is convenient in restricted environments where *https://service.gradle.org* is unavailable. We can deploy target Gradle distribution to a server inside the private network then and use it as a base for our custom Gradle distributions. The function receives the following arguments:  
        * `version` - target base Gradle distribution version, e.g. *5.1*
        * `type` - target base Gradle distribution type, e.g. `bin`  
        
        Following implementation is used by default:  
-       `return "https://services.gradle.org/distributions/gradle-$version-${type}.zip"` 
+       `return "https://services.gradle.org/distributions/gradle-${version}-${type}.zip"` 
      
     Resulting *build.gradle* might look like below:  
     ```groovy
@@ -103,35 +101,32 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
         customDistributionName = 'my-project'
     }
     ```
-4. Define common setup to be included to the custom Gradle distribution in the project's *src/main/resources/init.d* directory  
+4. Define common setup to be included to the custom Gradle distribution in the project's `src/main/resources/init.d` directory  
     
-    Note that the plugin supports simple text processing engine - it's possible to put utility scripts to the *src/main/resources/include*. Their content is applied to files from *src/main/resources/init.d* using `$utility-script-name$` syntax.  
+    Note that the plugin supports simple text processing engine - it's possible to put utility scripts to the `src/main/resources/include`. Their content is applied to files from `src/main/resources/init.d` using `$utility-script-name$` syntax.  
     
-    For example, we can have a file *src/main/resources/init.d/setup.gradle*:  
+    For example, we can have a file `src/main/resources/init.d/setup.gradle`:  
     ```groovy
     allprojects {
         $dependencies$
     }
     ```
     
-    and the following files in the *src/main/resources/include* directory:  
+    and the following files in the `src/main/resources/include` directory:  
+    * `src/main/resources/include/dependencies.gradle`:  
+        ```groovy
+        dependencies {
+            compile 'com.fasterxml.jackson.core:jackson-core:$jackson-version$'
+            compile 'com.fasterxml.jackson.module:jackson-module-kotlin:$jackson-version$'
+        }
+        ```  
     
-    *src/main/resources/include/dependencies.gradle*:  
+    * `src/main/resources/include/jackson-version.gradle`:  
+        ```groovy
+        2.9.6
+        ```  
     
-    ```groovy
-    dependencies {
-        compile 'com.fasterxml.jackson.core:jackson-core:$jackson-version$'
-        compile 'com.fasterxml.jackson.module:jackson-module-kotlin:$jackson-version$'
-    }
-    ```  
-    
-    *src/main/resources/include/jackson-version.gradle*:  
-    
-    ```groovy
-    2.9.6
-    ```  
-    
-    When custom Gradle distribution is created, its *init.d* directory has *setup.gradle* file with the following content then:  
+    When custom Gradle distribution is created, its `init.d` directory has `setup.gradle` file with the following content then:  
     
     ```groovy
     allprojects {
@@ -140,15 +135,15 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
     }
     ```  
     
-    Note that text processing might be nested, i.e. files from *src/main/resources/include* might refer to another files from the same directory through the `$file-name$` syntax.
+    Note that text processing might be nested, i.e. files from `src/main/resources/include` might refer to another files from the same directory through the `$file-name$` syntax.
     
-    There is an alternative setup where we want to produce more than one Gradle wrapper distribution (e.g. '*android*' and '*server*'). In this situation corresponding directories should be done in the *src/main/resources/init.d*:  
+    There is an alternative setup where we want to produce more than one Gradle wrapper distribution (e.g. `android` and `server`). In this situation corresponding directories should be created in the `src/main/resources/init.d`:  
     ```
     src
      |__ main
          |__ resources
                  |__ init.d
-                       |__ library
+                       |__ android
                        |      |__ android-setup.gradle
                        |
                        |__ server
@@ -170,7 +165,7 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
     ./gradlew buildGradleDist
     ```
     
-    The distribution(s) are located in the *build/gradle-dist*
+    The distribution(s) are located in the `build/gradle-dist`
 
 ### Configure Client Project
 
