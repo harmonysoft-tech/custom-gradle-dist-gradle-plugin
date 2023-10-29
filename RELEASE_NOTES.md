@@ -1,3 +1,6 @@
+## v1.11.0 released on 29 Oct 2023 UTC
+  * e580b2c54b7203f727181ceae78629a72386565a #9 Name of task that produces the custom distribution conflicts with task from base plugin
+  * bda05b8d12e4a626776b6aa924cbb253210ab7c7 configure compiled byte code to be java8 compatible
 ## v1.10.0 released on 28 Oct 2023 UTC
   * 7cb062be426a1f0134c9f4e930620295ffcee9af dummy change to bump version
 ## v1.9.0 released on 28 Oct 2023 UTC

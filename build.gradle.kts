@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "tech.harmonysoft"
-version = "1.10.0"
+version = "1.11.0"
 
 kotlin {
     jvmToolchain(8)
