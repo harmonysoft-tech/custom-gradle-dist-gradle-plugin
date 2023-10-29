@@ -186,7 +186,7 @@ class CustomGradleDistributionPluginTest {
         val testFiles = prepareInput(testName, buildGradleContent)
         GradleRunner.create()
             .withProjectDir(testFiles.inputRootDir)
-            .withArguments("build", "--stacktrace")
+            .withArguments("buildGradleDist", "--stacktrace")
             .withPluginClasspath()
             .withDebug(true)
             .build()

@@ -2,7 +2,7 @@ package tech.harmonysoft.oss.gradle.dist
 
 import org.gradle.api.provider.Property
 
-interface CustomGradleDistExtension {
+interface CustomGradleDistConfig {
 
     val gradleVersion: Property<String>
     val customDistributionName: Property<String>
