@@ -7,6 +7,10 @@ plugins {
 group = "tech.harmonysoft"
 version = "1.10.0"
 
+kotlin {
+    jvmToolchain(8)
+}
+
 gradlePlugin {
     website = "https://gradle-dist.oss.harmonysoft.tech/"
     vcsUrl = "https://github.com/denis-zhdanov/custom-gradle-dist-gradle-plugin"
