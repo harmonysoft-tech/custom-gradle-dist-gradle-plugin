@@ -6,6 +6,7 @@ interface CustomGradleDistConfig {
 
     val gradleVersion: Property<String>
     val customDistributionName: Property<String>
+    val customDistributionFileNameMapper: Property<(String, String, String, String?) -> String>
     val customDistributionVersion: Property<String>
     val gradleDistributionType: Property<String>
     val skipContentExpansionFor: Property<Collection<String>>

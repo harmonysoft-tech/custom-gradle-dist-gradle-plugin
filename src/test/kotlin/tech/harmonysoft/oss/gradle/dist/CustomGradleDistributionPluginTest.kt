@@ -178,6 +178,29 @@ class CustomGradleDistributionPluginTest {
         }
     }
 
+    @Test
+    fun `when custom distribution file name mapper is configured then it is respected`() {
+        val testFiles = doTest("single-distribution-no-templates", """
+            plugins {
+                id("tech.harmonysoft.oss.custom-gradle-dist-plugin")
+            }
+            
+            gradleDist {
+                gradleVersion = "$GRADLE_VERSION"
+                gradleDistributionType = "all"
+                customDistributionVersion = "$PROJECT_VERSION"
+                customDistributionFileNameMapper = { gradleVersion, customDistributionVersion, distributionType, distributionName ->
+                    "${"$"}{distributionType}-custom-${"$"}{customDistributionVersion}-base-${"$"}{gradleVersion}.zip"
+                }
+            }
+        """.trimIndent())
+        val expectedCustomDistributionFile = File(
+            testFiles.inputRootDir,
+            "build/gradle-dist/all-custom-${PROJECT_VERSION}-base-$GRADLE_VERSION.zip"
+        )
+        verifyDistributionName(expectedCustomDistributionFile)
+    }
+
     private fun doTest(testName: String): TestFiles {
         return doTest(testName, BUILD_TEMPLATE)
     }

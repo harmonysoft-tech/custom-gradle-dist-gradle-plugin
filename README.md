@@ -52,12 +52,37 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
     }
     ```
  3. Specify target settings in the `gradleDist {}` block.  
-     *mandatory settings:*
+     **mandatory settings:**
      * `gradleVersion` - base Gradle wrapper version
-     * `customDistributionName` - a unique identifier for the custom Gradle distribution
      * `customDistributionVersion` - custom distribution version
+     * `customDistributionFileNameMapper` - a function which generates resulting custom distribution file name for the given parameters. *Note: it's necessary to specify this property or 'distributionNameMapper' property. It's an error to define the both/none of them*
+       * `gradleVersion` - base gradle distribution version as defined above
+       * `customDistributionVersion` - custom distribution mixing version as defined above
+       * `gradleDistributionType` - gradle distribution type as defined below
+       * `distributionName` - nullable string - it's `null` in case client project produces a single custom Gradle distribution; non-`null` distribution name when multiple custom Gradle distributions are produced
+     * `customDistributionName` - a unique identifier for the custom Gradle distribution. If this property is defined, then resulting file name is `gradle-<gradleVersion>-<customDistributionName>-<customDistributionVersion>-<gradleDistributionType>.zip`, e.g. `gradle-8.4-my-company-1.2.3-bin.zip`. I.e. these two setups are the same:
+       ```
+       gradleDist {
+           ...
+           customDistributionName = "my-company"
+       }
+       ```
+       and
+       ```
+       gradleDist {
+           ...
+           customDistributionFileNameMapper = { gradleVersion, customDistributionVersion, gradleDistributionType, distributionName ->
+               val prefix = "gradle-$gradleVersion-${config.customDistributionName.get()}-$customDistributionVersion"
+                val suffix = "$gradleDistributionType.zip"
+                distributionName?.let {
+                    "$prefix-$it-$suffix"
+                } ?: "$prefix-$suffix"
+           }
+       }
+       ```
+     *Note: it's necessary to specify this property or 'customDistributionFileNameMapper' property. It's an error to define the both/none of them*
      
-     *optional settings:*
+     **optional settings:**
      * `gradleDistributionType` - allows to specify base Gradle distribution type. `bin` and `all` [are available](https://docs.gradle.org/current/userguide/gradle_wrapper.html#sec:adding_wrapper) at the moment, `bin` is used by default  
      * `skipContentExpansionFor` - the plugin by default expands content of the files included into custom Gradle distribution by default (see below). That might cause a problem if we want to add some binary file like `*.jar` or `*.so`. This property holds a list of root paths relative to `init.d` which content shouldn't be expanded.  
        Example: consider the following project structure:

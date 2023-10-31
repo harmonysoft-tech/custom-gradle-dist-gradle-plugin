@@ -140,12 +140,12 @@ abstract class BuildCustomGradleDistributionTask : DefaultTask() {
         project: Project,
         extension: CustomGradleDistConfig
     ) {
-        val gradlePart = "gradle-${extension.gradleVersion.get()}"
-        var customProjectPart = "${extension.customDistributionName.get()}-${extension.customDistributionVersion.get()}"
-        if (distribution != null) {
-            customProjectPart += "-$distribution"
-        }
-        val customDistributionFileName = "$gradlePart-${customProjectPart}-${extension.gradleDistributionType.get()}.zip"
+        val customDistributionFileName = extension.customDistributionFileNameMapper.get().invoke(
+            extension.gradleVersion.get(),
+            extension.customDistributionVersion.get(),
+            extension.gradleDistributionType.get(),
+            distribution
+        )
         val customDistributionsDir = getCustomDistributionsRootDir(project)
         val result = File(customDistributionsDir, customDistributionFileName)
 

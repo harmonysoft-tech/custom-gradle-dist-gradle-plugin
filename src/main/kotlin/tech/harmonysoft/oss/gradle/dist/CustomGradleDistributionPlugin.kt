@@ -16,17 +16,17 @@ class CustomGradleDistributionPlugin : Plugin<Project> {
         }
     }
 
-    private fun validateAndEnrich(extension: CustomGradleDistConfig) {
-        validateGradleVersion(extension)
-        validateCustomDistributionVersion(extension)
-        validateCustomDistributionName(extension)
-        configureDistributionTypeIfNecessary(extension)
-        configureGradleUrlMapperIfNecessary(extension)
-        configurePathToExcludeFromExpansionIfNecessary(extension)
+    private fun validateAndEnrich(config: CustomGradleDistConfig) {
+        validateGradleVersion(config)
+        validateCustomDistributionVersion(config)
+        configureCustomDistributionName(config)
+        configureDistributionTypeIfNecessary(config)
+        configureGradleUrlMapperIfNecessary(config)
+        configurePathToExcludeFromExpansionIfNecessary(config)
     }
 
-    private fun validateGradleVersion(extension: CustomGradleDistConfig) {
-        if (!extension.gradleVersion.isPresent || extension.gradleVersion.get().isBlank()) {
+    private fun validateGradleVersion(config: CustomGradleDistConfig) {
+        if (!config.gradleVersion.isPresent || config.gradleVersion.get().isBlank()) {
             throw IllegalStateException(
                 """
                     can not build custom gradle distribution - base gradle version is undefined. Please specify it like below:
@@ -39,8 +39,8 @@ class CustomGradleDistributionPlugin : Plugin<Project> {
         }
     }
 
-    private fun validateCustomDistributionVersion(extension: CustomGradleDistConfig) {
-        if (!extension.customDistributionVersion.isPresent || extension.customDistributionVersion.get().isBlank()) {
+    private fun validateCustomDistributionVersion(config: CustomGradleDistConfig) {
+        if (!config.customDistributionVersion.isPresent || config.customDistributionVersion.get().isBlank()) {
             throw IllegalStateException(
                 """
                     can not build - custom gradle distribution version is undefined. Please specify it like below:
@@ -53,37 +53,50 @@ class CustomGradleDistributionPlugin : Plugin<Project> {
         }
     }
 
-    private fun validateCustomDistributionName(extension: CustomGradleDistConfig) {
-        if (!extension.customDistributionName.isPresent || extension.customDistributionName.get().isBlank()) {
+    private fun configureCustomDistributionName(config: CustomGradleDistConfig) {
+        val hasCustomName = config.customDistributionName.isPresent
+                            && config.customDistributionName.get().isNotBlank()
+        if (hasCustomName && config.customDistributionFileNameMapper.isPresent) {
             throw IllegalStateException(
-                """
-                   can not build - custom gradle distribution project name is undefined. Please specify it like below:
-    
-                   gradleDist {
-                       ${CustomGradleDistConfig::customDistributionName.name} = "my-project"
-                   }
-                """.trimIndent()
+                "the both '${CustomGradleDistConfig::customDistributionName.name}' and "
+                + "'${CustomGradleDistConfig::customDistributionFileNameMapper.name}' are defined, "
+                + "but only one of them is required"
             )
         }
-    }
-
-    private fun configureDistributionTypeIfNecessary(extension: CustomGradleDistConfig) {
-        if (!extension.gradleDistributionType.isPresent) {
-            extension.gradleDistributionType.set("bin")
+        if (!hasCustomName && !config.customDistributionFileNameMapper.isPresent) {
+            throw IllegalStateException(
+                "one of '${CustomGradleDistConfig::customDistributionName.name}' or "
+                + "'${CustomGradleDistConfig::customDistributionFileNameMapper.name}' must be configured"
+            )
+        }
+        if (hasCustomName) {
+            config.customDistributionFileNameMapper.set { gradleVersion, customDistributionVersion, gradleDistributionType, distributionName ->
+                val prefix = "gradle-$gradleVersion-${config.customDistributionName.get()}-$customDistributionVersion"
+                val suffix = "$gradleDistributionType.zip"
+                distributionName?.let {
+                    "$prefix-$it-$suffix"
+                } ?: "$prefix-$suffix"
+            }
         }
     }
 
-    private fun configureGradleUrlMapperIfNecessary(extension: CustomGradleDistConfig) {
-        if (!extension.rootUrlMapper.isPresent) {
-            extension.rootUrlMapper.set { version, type ->
+    private fun configureDistributionTypeIfNecessary(config: CustomGradleDistConfig) {
+        if (!config.gradleDistributionType.isPresent) {
+            config.gradleDistributionType.set("bin")
+        }
+    }
+
+    private fun configureGradleUrlMapperIfNecessary(config: CustomGradleDistConfig) {
+        if (!config.rootUrlMapper.isPresent) {
+            config.rootUrlMapper.set { version, type ->
                 "https://services.gradle.org/distributions/gradle-$version-${type}.zip"
             }
         }
     }
 
-    private fun configurePathToExcludeFromExpansionIfNecessary(extension: CustomGradleDistConfig) {
-        if (!extension.skipContentExpansionFor.isPresent) {
-            extension.skipContentExpansionFor.set(emptyList())
+    private fun configurePathToExcludeFromExpansionIfNecessary(config: CustomGradleDistConfig) {
+        if (!config.skipContentExpansionFor.isPresent) {
+            config.skipContentExpansionFor.set(emptyList())
         }
     }
 }
