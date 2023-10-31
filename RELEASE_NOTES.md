@@ -1,3 +1,7 @@
+## v1.12.0 released on 31 Oct 2023 UTC
+  * 69f2ad637f910c997687ee2e79d20553d4525f29 #11 Add possibility to customize the naming of the custom distribution file
+  * 99d3bf425b3937ec123de5313bdfe43a57b51961 corrected documentation
+  * ffbfaad7b92fcba91cc499d622cf31bf045adf5c corrected README
 ## v1.11.0 released on 29 Oct 2023 UTC
   * e580b2c54b7203f727181ceae78629a72386565a #9 Name of task that produces the custom distribution conflicts with task from base plugin
   * bda05b8d12e4a626776b6aa924cbb253210ab7c7 configure compiled byte code to be java8 compatible
