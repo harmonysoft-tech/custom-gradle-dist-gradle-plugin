@@ -11,6 +11,22 @@ bootRun {
     main = 'com.mycompany.MyApplication'
 }
 ```
+
+## Table of Contents
+
+1. [License](#license)
+2. [Overview](#overview)
+3. [Problem](#problem)
+4. [Solution](#solution)
+5. [Usage](#usage)
+    * [Configure Custom Distribution](#configure-custom-distribution)
+    * [Configure Client Project](#configure-client-project) 
+    * [Note About Applying Plugins](#note-about-applying-plugins)
+6. [Examples](#examples)
+7. [Releases](#releases)
+8. [How to Contribute](#how-to-contribute)
+9. [Contributors](#contributors)
+10. [Feedback](#feedback)
  
 ## Problem
  
@@ -161,6 +177,24 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
     ```  
     
     Note that text processing might be nested, i.e. files from `src/main/resources/include` might refer to another files from the same directory through the `$file-name$` syntax.
+
+    Also, we can put any replacements into file `src/main/resources/include/replacements.properties`. Example:
+
+    `include/replacements.properties`
+    ```
+    spring.plugin.version = 3.1.5
+    spring.dependency.management.plugin.version = 1.1.3
+    ```
+   
+    `init.d/mixin.gradle`
+    ```
+    initscript {
+        dependencies {
+            classpath 'org.springframework.boot:spring-boot-gradle-plugin:$spring.plugin.version$'
+            classpath 'io.spring.gradle:dependency-management-plugin:$spring.dependency.management.plugin.version$'
+        }
+    }
+    ```
     
     There is an alternative setup where we want to produce more than one Gradle wrapper distribution (e.g. `android` and `server`). In this situation corresponding directories should be created in the `src/main/resources/init.d`:  
     ```
@@ -243,8 +277,8 @@ The latest plugin version can be found [here](https://plugins.gradle.org/plugin/
 
 ## How to Contribute
 
-* [report a problem/ask for enhancement](https://github.com/denis-zhdanov/custom-gradle-dist-gradle-plugin/issues)
-* [submit a pull request](https://github.com/denis-zhdanov/custom-gradle-dist-gradle-plugin/pulls)
+* [report a problem/ask for enhancement](https://github.com/harmonhsoft-tech/custom-gradle-dist-gradle-plugin/issues)
+* [submit a pull request](https://github.com/harmonhsoft-tech/custom-gradle-dist-gradle-plugin/pulls)
 * [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=3GJDPN3TH8T48&lc=EN&item_name=GradleDist&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted)
 
 ## Contributors

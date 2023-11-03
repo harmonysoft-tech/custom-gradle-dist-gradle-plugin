@@ -49,7 +49,7 @@ class CustomGradleDistributionPluginTest {
     @Test
     fun `when cyclic expansion chain is detected then it is reported`() {
         try {
-            doTest("cyclic-expansion")
+            doTest("cyclic-expansion-in-include-files")
             fail(
                 "expected to get an exception with problem details when cyclic " +
                 "replacements chain is detected - 'detected a cyclic text expansion sequence'"
@@ -199,6 +199,65 @@ class CustomGradleDistributionPluginTest {
             "build/gradle-dist/all-custom-${PROJECT_VERSION}-base-$GRADLE_VERSION.zip"
         )
         verifyDistributionName(expectedCustomDistributionFile)
+    }
+
+    @Test
+    fun `when replacements file is defined then it's respected`() {
+        doTest("only-replacements-file")
+    }
+
+    @Test
+    fun `when duplicate expansion is defined in replacements file and include file then it's handled as expected`() {
+        try {
+            doTest("duplicate-expansion-key")
+            fail("expected that duplicate expansion key is reported")
+        } catch (e: Exception) {
+            assertThat(e.message).contains("there is property 'repository' in replacements file")
+            assertThat(e.message).contains(
+                "and also there is an include file repository.gradle. Can't decide which one should be applied"
+            )
+        }
+    }
+
+    @Test
+    fun `when nested expansions happen in replacements file properties and include files then it works correctly`() {
+        doTest("cross-references-between-replacements-file-and-include-files")
+    }
+
+    @Test
+    fun `when cycle is found in replacements file then it's reported`() {
+        try {
+            doTest("cyclic-expansion-key-in-replacements-file")
+            fail("expected that cycle in replacements file is reported")
+        } catch (e: Exception) {
+            assertThat(e.message).contains("""
+                'prop3' (property from file replacements.properties)
+                  |
+                'prop1' (property from file replacements.properties)
+                  |
+                'prop2' (property from file replacements.properties)
+                  |
+                'prop3' (property from file replacements.properties)
+            """.trimIndent())
+        }
+    }
+
+    @Test
+    fun `when cycle is found in replacements file and include files then it's reported`() {
+        try {
+            doTest("cyclic-expansion-key-in-replacements-file-and-include-files")
+            fail("expected that cycle in replacements file is reported")
+        } catch (e: Exception) {
+            assertThat(e.message).contains("""
+                'prop1' (property from file replacements.properties)
+                  |
+                'file1' (include file file1.gradle)
+                  |
+                'file2' (include file file2.gradle)
+                  |
+                'prop1' (property from file replacements.properties)
+            """.trimIndent())
+        }
     }
 
     private fun doTest(testName: String): TestFiles {

@@ -1,0 +1,7 @@
+initscript {
+    $repository$
+}
+
+allprojects {
+    $repository$
+}
