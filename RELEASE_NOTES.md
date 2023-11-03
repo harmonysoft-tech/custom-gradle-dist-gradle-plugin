@@ -1,3 +1,5 @@
+## v1.13.0 released on 03 Nov 2023 UTC
+  * d6ee70e0416f53acb3676bf974fb0c49b1249ced #4 Support replacement / merging of parameters from a source file
 ## v1.12.0 released on 31 Oct 2023 UTC
   * 69f2ad637f910c997687ee2e79d20553d4525f29 #11 Add possibility to customize the naming of the custom distribution file
   * 99d3bf425b3937ec123de5313bdfe43a57b51961 corrected documentation
