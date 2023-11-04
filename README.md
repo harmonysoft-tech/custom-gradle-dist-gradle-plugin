@@ -54,7 +54,6 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
  3. Specify target settings in the `gradleDist {}` block.  
      **mandatory settings:**
      * `gradleVersion` - base Gradle wrapper version
-     * `customDistributionVersion` - custom distribution version
      * `customDistributionFileNameMapper` - a function which generates resulting custom distribution file name for the given parameters. *Note: it's necessary to specify this property or 'distributionNameMapper' property. It's an error to define the both/none of them*
        * `gradleVersion` - base gradle distribution version as defined above
        * `customDistributionVersion` - custom distribution mixing version as defined above
@@ -83,6 +82,7 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
      *Note: it's necessary to specify this property or 'customDistributionFileNameMapper' property. It's an error to define the both/none of them*
      
      **optional settings:**
+     * `customDistributionVersion` - allows to specify custom distribution version, `project.version` is used by default
      * `gradleDistributionType` - allows to specify base Gradle distribution type. `bin` and `all` [are available](https://docs.gradle.org/current/userguide/gradle_wrapper.html#sec:adding_wrapper) at the moment, `bin` is used by default  
      * `skipContentExpansionFor` - the plugin by default expands content of the files included into custom Gradle distribution by default (see below). That might cause a problem if we want to add some binary file like `*.jar` or `*.so`. This property holds a list of root paths relative to `init.d` which content shouldn't be expanded.  
        Example: consider the following project structure:

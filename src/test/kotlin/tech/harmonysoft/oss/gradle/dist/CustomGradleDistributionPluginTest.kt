@@ -1,18 +1,18 @@
 package tech.harmonysoft.oss.gradle.dist
 
+import org.assertj.core.api.Assertions.assertThat
+import org.gradle.testkit.runner.GradleRunner
+import org.junit.jupiter.api.Test
+import tech.harmonysoft.oss.test.util.TestUtil.fail
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.Stack
+import java.util.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
-import org.assertj.core.api.Assertions.assertThat
-import org.gradle.testkit.runner.GradleRunner
-import org.junit.jupiter.api.Test
-import tech.harmonysoft.oss.test.util.TestUtil.fail
 
 class CustomGradleDistributionPluginTest {
 
@@ -120,7 +120,7 @@ class CustomGradleDistributionPluginTest {
             testFiles.inputRootDir,
             "build/gradle-dist/gradle-$GRADLE_VERSION-$PROJECT_NAME-$PROJECT_VERSION-bin.zip"
         )
-        verifyDistributionName(expectedCustomDistributionFile)
+        verifyDistributionFile(expectedCustomDistributionFile)
         assertThat(expectedCustomDistributionFile).exists()
     }
 
@@ -142,10 +142,10 @@ class CustomGradleDistributionPluginTest {
             testFiles.inputRootDir,
             "build/gradle-dist/gradle-$GRADLE_VERSION-$PROJECT_NAME-$PROJECT_VERSION-all.zip"
         )
-        verifyDistributionName(expectedCustomDistributionFile)
+        verifyDistributionFile(expectedCustomDistributionFile)
     }
 
-    private fun verifyDistributionName(expectedCustomDistributionFile: File) {
+    private fun verifyDistributionFile(expectedCustomDistributionFile: File) {
         if (!expectedCustomDistributionFile.isFile) {
             fail(
                 "expected custom distribution file ${expectedCustomDistributionFile.name} is not found at "
@@ -174,7 +174,7 @@ class CustomGradleDistributionPluginTest {
                 testFiles.inputRootDir,
                 "build/gradle-dist/gradle-$GRADLE_VERSION-$PROJECT_NAME-$PROJECT_VERSION-$distribution-all.zip"
             )
-            verifyDistributionName(expectedCustomDistributionFile)
+            verifyDistributionFile(expectedCustomDistributionFile)
         }
     }
 
@@ -198,7 +198,76 @@ class CustomGradleDistributionPluginTest {
             testFiles.inputRootDir,
             "build/gradle-dist/all-custom-${PROJECT_VERSION}-base-$GRADLE_VERSION.zip"
         )
-        verifyDistributionName(expectedCustomDistributionFile)
+        verifyDistributionFile(expectedCustomDistributionFile)
+    }
+
+    @Test
+    fun `when customDistributionVersion is not defined then project version is used`() {
+        val version = "1.2.3"
+        val testFiles = doTest("single-distribution-no-templates", """
+            plugins {
+                id("tech.harmonysoft.oss.custom-gradle-dist-plugin")
+            }
+            
+            version = "$version"
+            
+            gradleDist {
+                gradleVersion = "$GRADLE_VERSION"
+                gradleDistributionType = "all"
+                customDistributionName = "$PROJECT_NAME"
+            }
+        """.trimIndent())
+
+        val expectedCustomDistributionFile = File(
+                testFiles.inputRootDir,
+                "build/gradle-dist/gradle-$GRADLE_VERSION-$PROJECT_NAME-$version-all.zip"
+        )
+        verifyDistributionFile(expectedCustomDistributionFile)
+    }
+
+    @Test
+    fun `when customDistributionVersion is defined then it is used`() {
+        val version = "1.2.3"
+        val customDistributionVersion = "3.2.1"
+        val testFiles = doTest("single-distribution-no-templates", """
+            plugins {
+                id("tech.harmonysoft.oss.custom-gradle-dist-plugin")
+            }
+            
+            version = "$version"
+            
+            gradleDist {
+                gradleVersion = "$GRADLE_VERSION"
+                gradleDistributionType = "all"
+                customDistributionName = "$PROJECT_NAME"
+                customDistributionVersion = "$customDistributionVersion"
+            }
+        """.trimIndent())
+
+        val expectedCustomDistributionFile = File(
+                testFiles.inputRootDir,
+                "build/gradle-dist/gradle-$GRADLE_VERSION-$PROJECT_NAME-$customDistributionVersion-all.zip"
+        )
+        verifyDistributionFile(expectedCustomDistributionFile)
+    }
+
+    @Test
+    fun `when customDistributionVersion and project version are not defined then build fails`() {
+        try {
+            doTest("single-distribution-no-templates", """
+            plugins {
+                id("tech.harmonysoft.oss.custom-gradle-dist-plugin")
+            }
+            
+            gradleDist {
+                gradleVersion = "$GRADLE_VERSION"
+                gradleDistributionType = "all"
+                customDistributionName = "$PROJECT_NAME"
+            }
+        """.trimIndent())
+        } catch (e: Exception) {
+            assertThat(e.message).contains("custom gradle distribution version is undefined. Please specify it like below or use project.version as default")
+        }
     }
 
     private fun doTest(testName: String): TestFiles {
