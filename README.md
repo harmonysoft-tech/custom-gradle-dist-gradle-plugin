@@ -71,11 +71,33 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
      **mandatory settings:**
      * `gradleVersion` - base Gradle wrapper version
      * `customDistributionVersion` - custom distribution version
-     * `customDistributionFileNameMapper` - a function which generates resulting custom distribution file name for the given parameters. *Note: it's necessary to specify this property or 'distributionNameMapper' property. It's an error to define the both/none of them*
+     * `customDistributionFileNameMapper` - a property of type [CustomDistributionNameMapper](./src/main/kotlin/tech/harmonysoft/oss/gradle/dist/config/CustomDistributionNameMapper.kt) which generates resulting custom distribution file name for the given parameters. *Note: it's necessary to specify this property or 'distributionNameMapper' property. It's an error to define the both/none of them*
        * `gradleVersion` - base gradle distribution version as defined above
        * `customDistributionVersion` - custom distribution mixing version as defined above
        * `gradleDistributionType` - gradle distribution type as defined below
        * `distributionName` - nullable string - it's `null` in case client project produces a single custom Gradle distribution; non-`null` distribution name when multiple custom Gradle distributions are produced
+
+        we configure it in `build.gradle.kts` as below:
+        ```
+        import tech.harmonysoft.oss.gradle.dist.config.CustomDistributionNameMapper
+        ...
+        gradleDist {
+            customDistributionFileNameMapper = CustomDistributionNameMapper {
+                gradleVersion: String, customDistributionVersion: String, distributionType: String, distributionName: String? ->
+                    "${"$"}{distributionType}-custom-${"$"}{customDistributionVersion}-base-${"$"}{gradleVersion}.zip"
+            }
+        }
+        ```
+       this is how it can be configured in `build.gradle`:
+       ```
+       import tech.harmonysoft.oss.gradle.dist.config.CustomDistributionNameMapper
+       ...
+       gradleDist {
+           customDistributionFileNameMapper = { gradleVersion, customDistributionVersion, distributionType, distributionName ->
+               "${"$"}{distributionType}-custom-${"$"}{customDistributionVersion}-base-${"$"}{gradleVersion}.zip"
+           } as CustomDistributionNameMapper
+       }
+       ```
      * `customDistributionName` - a unique identifier for the custom Gradle distribution. If this property is defined, then resulting file name is `gradle-<gradleVersion>-<customDistributionName>-<customDistributionVersion>-<gradleDistributionType>.zip`, e.g. `gradle-8.4-my-company-1.2.3-bin.zip`. I.e. these two setups are the same:
        ```
        gradleDist {
@@ -123,12 +145,34 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
          skipContentExpansionFor = listOf("bin/profiler")
        }
        ```
-     * `rootUrlMapper` - a function which allows to build an url to the root base Gradle distribution path. This property is convenient in restricted environments where *https://service.gradle.org* is unavailable. We can deploy target Gradle distribution to a server inside the private network then and use it as a base for our custom Gradle distributions. The function receives the following arguments:  
+     * `rootUrlMapper` - a property of type [GradleUrlMapper](./src/main/kotlin/tech/harmonysoft/oss/gradle/dist/config/GradleUrlMapper.kt) which allows to build an url to the root base Gradle distribution path. This property is convenient in restricted environments where *https://service.gradle.org* is unavailable. We can deploy target Gradle distribution to a server inside the private network then and use it as a base for our custom Gradle distributions. The function receives the following arguments:  
        * `version` - target base Gradle distribution version, e.g. *5.1*
        * `type` - target base Gradle distribution type, e.g. `bin`  
        
-       Following implementation is used by default:  
-       `return "https://services.gradle.org/distributions/gradle-${version}-${type}.zip"` 
+       Following implementation is used by default (`build.gradle.kts`):
+
+       ```
+       import tech.harmonysoft.oss.gradle.dist.config.GradleUrlMapper
+       ...
+       gradleDist {
+           ...
+           rootUrlMapper = GradleUrlMapper { version: String, type: String ->
+               "https://services.gradle.org/distributions/gradle-${version}-${type}.zip"
+           }
+       }
+       ```
+       
+       `build.gradle` syntax for the same:
+       ```
+       import tech.harmonysoft.oss.gradle.dist.config.GradleUrlMapper
+       ...
+       gradleDist {
+         ...
+         rootUrlMapper = { version, type ->
+             "https://services.gradle.org/distributions/gradle-${version}-${type}.zip"
+         } as GradleUrlMapper
+       }
+       ```
      
     Resulting *build.gradle* might look like below:  
     ```groovy

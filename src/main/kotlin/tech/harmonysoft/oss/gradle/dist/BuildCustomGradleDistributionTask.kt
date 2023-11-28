@@ -17,6 +17,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 import org.gradle.tooling.BuildException
+import tech.harmonysoft.oss.gradle.dist.config.CustomGradleDistConfig
 
 abstract class BuildCustomGradleDistributionTask : DefaultTask() {
 
@@ -84,10 +85,10 @@ abstract class BuildCustomGradleDistributionTask : DefaultTask() {
                 }
             }
             download(
-                fromUrl = extension.rootUrlMapper.get().invoke(
+                fromUrl = extension.rootUrlMapper.get().map(
                     extension.gradleVersion.get(),
                     extension.gradleDistributionType.get()
-                ),
+                ).toString(),
                 toFile = File(archiveDir, gradleZip)
             )
         }
@@ -293,12 +294,12 @@ abstract class BuildCustomGradleDistributionTask : DefaultTask() {
         extension: CustomGradleDistConfig,
         replacements: Map<String, String>
     ) {
-        val customDistributionFileName = extension.customDistributionFileNameMapper.get().invoke(
-            extension.gradleVersion.get(),
-            extension.customDistributionVersion.get(),
-            extension.gradleDistributionType.get(),
-            distribution
-        )
+        val customDistributionFileName = extension.customDistributionFileNameMapper.get().map(
+            gradleVersion = extension.gradleVersion.get(),
+            customDistributionVersion = extension.customDistributionVersion.get(),
+            gradleDistributionType = extension.gradleDistributionType.get(),
+            distributionName = distribution
+        ).toString()
         val customDistributionsDir = getCustomDistributionsRootDir()
         val result = File(customDistributionsDir, customDistributionFileName)
 

@@ -2,6 +2,8 @@ package tech.harmonysoft.oss.gradle.dist
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import tech.harmonysoft.oss.gradle.dist.config.CustomGradleDistConfig
+import tech.harmonysoft.oss.gradle.dist.config.GradleUrlMapper
 
 @Suppress("unused")
 class CustomGradleDistributionPlugin : Plugin<Project> {
@@ -88,9 +90,9 @@ class CustomGradleDistributionPlugin : Plugin<Project> {
 
     private fun configureGradleUrlMapperIfNecessary(config: CustomGradleDistConfig) {
         if (!config.rootUrlMapper.isPresent) {
-            config.rootUrlMapper.set { version, type ->
+            config.rootUrlMapper.set(GradleUrlMapper { version, type ->
                 "https://services.gradle.org/distributions/gradle-$version-${type}.zip"
-            }
+            })
         }
     }
 
