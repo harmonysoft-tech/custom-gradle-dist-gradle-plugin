@@ -255,16 +255,16 @@ class CustomGradleDistributionPluginTest {
     fun `when customDistributionVersion and project version are not defined then build fails`() {
         try {
             doTest("single-distribution-no-templates", """
-            plugins {
-                id("tech.harmonysoft.oss.custom-gradle-dist-plugin")
-            }
-            
-            gradleDist {
-                gradleVersion = "$GRADLE_VERSION"
-                gradleDistributionType = "all"
-                customDistributionName = "$PROJECT_NAME"
-            }
-        """.trimIndent())
+                plugins {
+                    id("tech.harmonysoft.oss.custom-gradle-dist-plugin")
+                }
+                
+                gradleDist {
+                    gradleVersion = "$GRADLE_VERSION"
+                    gradleDistributionType = "all"
+                    customDistributionName = "$PROJECT_NAME"
+                }
+            """.trimIndent())
         } catch (e: Exception) {
             assertThat(e.message).contains("custom gradle distribution version is undefined. Please specify it like below or use project.version as default")
         }

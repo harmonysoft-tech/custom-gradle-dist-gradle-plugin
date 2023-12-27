@@ -9,7 +9,7 @@ class CustomGradleDistributionPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         val config = project.extensions.create("gradleDist", CustomGradleDistConfig::class.java)
         project.afterEvaluate {
-            validateAndEnrich(config, project)
+            validateAndEnrich(config, it)
             project.tasks.register("buildGradleDist", BuildCustomGradleDistributionTask::class.java) {
                 it.config.set(config)
             }
@@ -40,8 +40,8 @@ class CustomGradleDistributionPlugin : Plugin<Project> {
     }
 
     private fun configureCustomDistributionVersionIfNecessary(config: CustomGradleDistConfig, project: Project) {
-        val customDistributionVersionNotSpecified = !config.customDistributionVersion.isPresent || config.customDistributionVersion.get().isBlank()
-        if (customDistributionVersionNotSpecified && project.version == "unspecified") {
+        val notSpecified = !config.customDistributionVersion.isPresent || config.customDistributionVersion.get().isBlank()
+        if (notSpecified && project.version == Project.DEFAULT_VERSION) {
             throw IllegalStateException(
                 """
                     can not build - custom gradle distribution version is undefined. Please specify it like below or use project.version as default:
@@ -52,7 +52,7 @@ class CustomGradleDistributionPlugin : Plugin<Project> {
                 """.trimIndent()
             )
         }
-        if (customDistributionVersionNotSpecified) {
+        if (notSpecified) {
             config.customDistributionVersion.set(project.version.toString())
         }
     }
