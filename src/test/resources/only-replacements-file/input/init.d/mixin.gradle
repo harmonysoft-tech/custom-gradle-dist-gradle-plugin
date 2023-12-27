@@ -1,0 +1,16 @@
+initscript {
+    $repository$
+    dependencies {
+        classpath 'org.springframework.boot:spring-boot-gradle-plugin:$spring.plugin.version$'
+        classpath 'io.spring.gradle:dependency-management-plugin:$spring.dependency.management.plugin.version$'
+    }
+}
+
+allprojects {
+
+    $repository$
+
+    dependencies {
+        implementation 'org.springframework.boot:spring-boot-starter-web'
+    }
+}

@@ -1,0 +1,15 @@
+initscript {
+    $repositoryProp$
+    dependencies {
+        $initscript-dependencies$
+    }
+}
+
+allprojects {
+
+    $repositoryProp$
+
+    dependencies {
+        implementation 'org.springframework.boot:spring-boot-starter-web'
+    }
+}

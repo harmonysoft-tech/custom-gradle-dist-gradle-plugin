@@ -11,6 +11,22 @@ bootRun {
     main = 'com.mycompany.MyApplication'
 }
 ```
+
+## Table of Contents
+
+1. [License](#license)
+2. [Overview](#overview)
+3. [Problem](#problem)
+4. [Solution](#solution)
+5. [Usage](#usage)
+    * [Configure Custom Distribution](#configure-custom-distribution)
+    * [Configure Client Project](#configure-client-project) 
+    * [Note About Applying Plugins](#note-about-applying-plugins)
+6. [Examples](#examples)
+7. [Releases](#releases)
+8. [How to Contribute](#how-to-contribute)
+9. [Contributors](#contributors)
+10. [Feedback](#feedback)
  
 ## Problem
  
@@ -54,11 +70,33 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
  3. Specify target settings in the `gradleDist {}` block.  
      **mandatory settings:**
      * `gradleVersion` - base Gradle wrapper version
-     * `customDistributionFileNameMapper` - a function which generates resulting custom distribution file name for the given parameters. *Note: it's necessary to specify this property or 'distributionNameMapper' property. It's an error to define the both/none of them*
+     * `customDistributionFileNameMapper` - a property of type [CustomDistributionNameMapper](./src/main/kotlin/tech/harmonysoft/oss/gradle/dist/config/CustomDistributionNameMapper.kt) which generates resulting custom distribution file name for the given parameters. *Note: it's necessary to specify this property or 'distributionNameMapper' property. It's an error to define the both/none of them*
        * `gradleVersion` - base gradle distribution version as defined above
        * `customDistributionVersion` - custom distribution mixing version as defined above
        * `gradleDistributionType` - gradle distribution type as defined below
        * `distributionName` - nullable string - it's `null` in case client project produces a single custom Gradle distribution; non-`null` distribution name when multiple custom Gradle distributions are produced
+
+        we configure it in `build.gradle.kts` as below:
+        ```
+        import tech.harmonysoft.oss.gradle.dist.config.CustomDistributionNameMapper
+        ...
+        gradleDist {
+            customDistributionFileNameMapper = CustomDistributionNameMapper {
+                gradleVersion: String, customDistributionVersion: String, distributionType: String, distributionName: String? ->
+                    "${"$"}{distributionType}-custom-${"$"}{customDistributionVersion}-base-${"$"}{gradleVersion}.zip"
+            }
+        }
+        ```
+       this is how it can be configured in `build.gradle`:
+       ```
+       import tech.harmonysoft.oss.gradle.dist.config.CustomDistributionNameMapper
+       ...
+       gradleDist {
+           customDistributionFileNameMapper = { gradleVersion, customDistributionVersion, distributionType, distributionName ->
+               "${"$"}{distributionType}-custom-${"$"}{customDistributionVersion}-base-${"$"}{gradleVersion}.zip"
+           } as CustomDistributionNameMapper
+       }
+       ```
      * `customDistributionName` - a unique identifier for the custom Gradle distribution. If this property is defined, then resulting file name is `gradle-<gradleVersion>-<customDistributionName>-<customDistributionVersion>-<gradleDistributionType>.zip`, e.g. `gradle-8.4-my-company-1.2.3-bin.zip`. I.e. these two setups are the same:
        ```
        gradleDist {
@@ -107,12 +145,34 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
          skipContentExpansionFor = listOf("bin/profiler")
        }
        ```
-     * `rootUrlMapper` - a function which allows to build an url to the root base Gradle distribution path. This property is convenient in restricted environments where *https://service.gradle.org* is unavailable. We can deploy target Gradle distribution to a server inside the private network then and use it as a base for our custom Gradle distributions. The function receives the following arguments:  
+     * `rootUrlMapper` - a property of type [GradleUrlMapper](./src/main/kotlin/tech/harmonysoft/oss/gradle/dist/config/GradleUrlMapper.kt) which allows to build an url to the root base Gradle distribution path. This property is convenient in restricted environments where *https://service.gradle.org* is unavailable. We can deploy target Gradle distribution to a server inside the private network then and use it as a base for our custom Gradle distributions. The function receives the following arguments:  
        * `version` - target base Gradle distribution version, e.g. *5.1*
        * `type` - target base Gradle distribution type, e.g. `bin`  
        
-       Following implementation is used by default:  
-       `return "https://services.gradle.org/distributions/gradle-${version}-${type}.zip"` 
+       Following implementation is used by default (`build.gradle.kts`):
+
+       ```
+       import tech.harmonysoft.oss.gradle.dist.config.GradleUrlMapper
+       ...
+       gradleDist {
+           ...
+           rootUrlMapper = GradleUrlMapper { version: String, type: String ->
+               "https://services.gradle.org/distributions/gradle-${version}-${type}.zip"
+           }
+       }
+       ```
+       
+       `build.gradle` syntax for the same:
+       ```
+       import tech.harmonysoft.oss.gradle.dist.config.GradleUrlMapper
+       ...
+       gradleDist {
+         ...
+         rootUrlMapper = { version, type ->
+             "https://services.gradle.org/distributions/gradle-${version}-${type}.zip"
+         } as GradleUrlMapper
+       }
+       ```
      
     Resulting *build.gradle* might look like below:  
     ```groovy
@@ -161,6 +221,24 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
     ```  
     
     Note that text processing might be nested, i.e. files from `src/main/resources/include` might refer to another files from the same directory through the `$file-name$` syntax.
+
+    Also, we can put any replacements into file `src/main/resources/include/replacements.properties`. Example:
+
+    `include/replacements.properties`
+    ```
+    spring.plugin.version = 3.1.5
+    spring.dependency.management.plugin.version = 1.1.3
+    ```
+   
+    `init.d/mixin.gradle`
+    ```
+    initscript {
+        dependencies {
+            classpath 'org.springframework.boot:spring-boot-gradle-plugin:$spring.plugin.version$'
+            classpath 'io.spring.gradle:dependency-management-plugin:$spring.dependency.management.plugin.version$'
+        }
+    }
+    ```
     
     There is an alternative setup where we want to produce more than one Gradle wrapper distribution (e.g. `android` and `server`). In this situation corresponding directories should be created in the `src/main/resources/init.d`:  
     ```
@@ -243,8 +321,8 @@ The latest plugin version can be found [here](https://plugins.gradle.org/plugin/
 
 ## How to Contribute
 
-* [report a problem/ask for enhancement](https://github.com/denis-zhdanov/custom-gradle-dist-gradle-plugin/issues)
-* [submit a pull request](https://github.com/denis-zhdanov/custom-gradle-dist-gradle-plugin/pulls)
+* [report a problem/ask for enhancement](https://github.com/harmonhsoft-tech/custom-gradle-dist-gradle-plugin/issues)
+* [submit a pull request](https://github.com/harmonhsoft-tech/custom-gradle-dist-gradle-plugin/pulls)
 * [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=3GJDPN3TH8T48&lc=EN&item_name=GradleDist&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted)
 
 ## Contributors
