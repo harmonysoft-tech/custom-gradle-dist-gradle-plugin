@@ -1,3 +1,5 @@
+## v1.15.0 released on 09 Apr 2024 UTC
+  * ed1b44c494b620caf78d4fffc0a639120f31328e corrected the logging
 ## v1.14.0 released on 28 Nov 2023 UTC
   * dbad9a24b6cf02bf70946a565a425bab8407892a #13 Configuring gradleDist.rootUrlMapper doesn't work anymore using closure
 ## v1.13.0 released on 03 Nov 2023 UTC
