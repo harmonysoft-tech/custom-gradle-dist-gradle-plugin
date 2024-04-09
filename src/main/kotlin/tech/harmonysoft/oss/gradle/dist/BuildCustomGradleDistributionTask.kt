@@ -311,7 +311,7 @@ abstract class BuildCustomGradleDistributionTask : DefaultTask() {
             pathsToExcludeFromContentExpansion = extension.skipContentExpansionFor.get().toSet(),
             replacements = replacements
         )
-        project.logger.lifecycle("prepared custom gradle distribution at $result.absolutePath")
+        project.logger.lifecycle("prepared custom gradle distribution at ${result.absolutePath}")
     }
 
     private fun copyBaseDistribution(baseDistribution: File, customDistribution: File) {
