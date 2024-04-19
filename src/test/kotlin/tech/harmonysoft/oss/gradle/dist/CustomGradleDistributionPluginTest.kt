@@ -51,6 +51,27 @@ class CustomGradleDistributionPluginTest {
     }
 
     @Test
+    fun `when custom single gradle distribution is built with project distribution version`() {
+        val testFiles = doTest("single-distribution-no-templates", """
+            plugins {
+                id("tech.harmonysoft.oss.custom-gradle-dist-plugin")
+            }
+            
+            version = "1.1"
+            
+            gradleDist {
+                gradleVersion = "$GRADLE_VERSION"
+                customDistributionName = "$PROJECT_NAME"
+            }
+        """.trimIndent())
+        val expectedCustomDistributionFile = File(
+            testFiles.inputRootDir,
+            "$BUILT_DISTS_DIR/gradle-$GRADLE_VERSION-$PROJECT_NAME-1.1-bin.zip"
+        )
+        verifyDistributionName(expectedCustomDistributionFile)
+    }
+
+    @Test
     fun `when cyclic expansion chain is detected then it is reported`() {
         try {
             doTest("cyclic-expansion-in-include-files")

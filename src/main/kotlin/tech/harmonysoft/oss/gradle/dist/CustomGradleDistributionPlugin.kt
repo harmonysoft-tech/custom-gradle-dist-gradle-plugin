@@ -10,6 +10,9 @@ class CustomGradleDistributionPlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
         val config = project.extensions.create("gradleDist", CustomGradleDistConfig::class.java)
+        config.customDistributionVersion.convention(
+            project.provider { project.version.toString() }
+        )
         project.tasks.register("buildGradleDist", BuildCustomGradleDistributionTask::class.java) {
             it.config.set(config)
         }

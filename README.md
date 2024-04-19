@@ -70,7 +70,7 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
  3. Specify target settings in the `gradleDist {}` block.  
      **mandatory settings:**
      * `gradleVersion` - base Gradle wrapper version
-     * `customDistributionVersion` - custom distribution version
+     * `customDistributionVersion` - custom distribution version (`project.version` is used by default)
      * `customDistributionFileNameMapper` - a property of type [CustomDistributionNameMapper](./src/main/kotlin/tech/harmonysoft/oss/gradle/dist/config/CustomDistributionNameMapper.kt) which generates resulting custom distribution file name for the given parameters. *Note: it's necessary to specify this property or 'distributionNameMapper' property. It's an error to define the both/none of them*
        * `gradleVersion` - base gradle distribution version as defined above
        * `customDistributionVersion` - custom distribution mixing version as defined above
