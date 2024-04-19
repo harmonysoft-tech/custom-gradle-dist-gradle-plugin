@@ -455,14 +455,18 @@ abstract class BuildCustomGradleDistributionTask : DefaultTask() {
         }
         if (exclusionRule == null) {
             val tempFile = Files.createTempFile("", "${fileToInclude.name}.tmp").toFile()
-            val expandedContent = expand(RichValue(
-                value = fileToInclude.readText(),
-                description = "file ${fileToInclude.name}"
-            )) {
-                replacements[it]
+            try {
+                val expandedContent = expand(RichValue(
+                    value = fileToInclude.readText(),
+                    description = "file ${fileToInclude.name}"
+                )) {
+                    replacements[it]
+                }
+                tempFile.writeText(expandedContent)
+                Files.copy(tempFile.toPath(), to)
+            } finally {
+                tempFile.delete()
             }
-            tempFile.writeText(expandedContent)
-            Files.copy(tempFile.toPath(), to)
         } else {
             project.logger.lifecycle(
                 "skipped content expansion for file $relativePath because of exclusion rule '$exclusionRule'"

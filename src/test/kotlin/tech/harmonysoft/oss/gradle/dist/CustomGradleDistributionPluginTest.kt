@@ -292,7 +292,7 @@ class CustomGradleDistributionPluginTest {
 
     @Test
     fun `when custom base gradle distribution mapper is defined in gradle groovy script then it's respected`() {
-        val customBaseGradleDistFile = Files.createTempFile("base-gradle-dist", "").toFile()
+        val customBaseGradleDistFile = Files.createTempFile(TESTS_ARTIFACTS_ROOT_DIR, "base-gradle-dist", "").toFile()
         createGradleDistributionZip(customBaseGradleDistFile)
         val testFiles = prepareInput("single-distribution-no-templates","""
             import tech.harmonysoft.oss.gradle.dist.config.GradleUrlMapper
@@ -315,7 +315,7 @@ class CustomGradleDistributionPluginTest {
 
     @Test
     fun `when custom base gradle distribution mapper is defined in gradle kotlin script then it's respected`() {
-        val customBaseGradleDistFile = Files.createTempFile("base-gradle-dist", "").toFile()
+        val customBaseGradleDistFile = Files.createTempFile(TESTS_ARTIFACTS_ROOT_DIR, "base-gradle-dist", "").toFile()
         createGradleDistributionZip(customBaseGradleDistFile)
         val testFiles = prepareInput("single-distribution-no-templates", """
             import tech.harmonysoft.oss.gradle.dist.config.GradleUrlMapper
@@ -363,9 +363,7 @@ class CustomGradleDistributionPluginTest {
     }
 
     private fun copy(dir: File): File {
-        val result = Files.createTempDirectory("${dir.name}-tmp").toFile().apply {
-            deleteOnExit()
-        }
+        val result = Files.createTempDirectory(TESTS_ARTIFACTS_ROOT_DIR, dir.name).toFile()
         val resourcesRoot = File(result, "src/main/resources")
         Files.createDirectories(resourcesRoot.toPath())
         dir.listFiles()?.forEach { child ->
@@ -484,7 +482,7 @@ class CustomGradleDistributionPluginTest {
             )
         }
         val zip = zips.first()
-        val rootUnzipDir = Files.createTempDirectory(zip.name).toFile()
+        val rootUnzipDir = Files.createTempDirectory(TESTS_ARTIFACTS_ROOT_DIR, zip.name).toFile()
         val zipFile = ZipFile(zip)
         for (zipEntry in zipFile.entries()) {
             val path = File(rootUnzipDir, zipEntry.name).toPath()
@@ -547,6 +545,9 @@ class CustomGradleDistributionPluginTest {
 
         @field:TempDir(cleanup = CleanupMode.ON_SUCCESS)
         lateinit var DOWNLOAD_ROOT_DIR: Path
+
+        @field:TempDir(cleanup = CleanupMode.ON_SUCCESS)
+        lateinit var TESTS_ARTIFACTS_ROOT_DIR: Path
 
         val BUILD_TEMPLATE = """
             plugins {
