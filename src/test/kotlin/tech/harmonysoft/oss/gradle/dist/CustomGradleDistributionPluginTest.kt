@@ -12,6 +12,8 @@ import java.util.zip.ZipOutputStream
 import org.assertj.core.api.Assertions.assertThat
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.CleanupMode
+import org.junit.jupiter.api.io.TempDir
 import tech.harmonysoft.oss.test.util.TestUtil.fail
 
 class CustomGradleDistributionPluginTest {
@@ -524,7 +526,7 @@ class CustomGradleDistributionPluginTest {
     private fun runAndVerify(testFiles: TestFiles) {
         GradleRunner.create()
             .withProjectDir(testFiles.inputRootDir)
-            .withArguments("buildGradleDist", "--stacktrace")
+            .withArguments("buildGradleDist", "--stacktrace", "-PgradleDist.downloadRootDir=$DOWNLOAD_ROOT_DIR")
             .withPluginClasspath()
             .withDebug(true)
             .build()
@@ -542,6 +544,9 @@ class CustomGradleDistributionPluginTest {
         const val GRADLE_VERSION = "8.3"
         const val PROJECT_NAME = "my-project"
         const val PROJECT_VERSION = "1.0"
+
+        @field:TempDir(cleanup = CleanupMode.ON_SUCCESS)
+        lateinit var DOWNLOAD_ROOT_DIR: Path
 
         val BUILD_TEMPLATE = """
             plugins {

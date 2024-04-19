@@ -13,22 +13,36 @@ import java.nio.file.Files
 import java.util.Properties
 import java.util.Stack
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 import org.gradle.tooling.BuildException
 import tech.harmonysoft.oss.gradle.dist.config.CustomGradleDistConfig
 
+@Suppress("LeakingThis")
 abstract class BuildCustomGradleDistributionTask : DefaultTask() {
 
     @get:Internal
     abstract val config: Property<CustomGradleDistConfig>
+
+    @get:Internal
+    abstract val downloadRootDir: DirectoryProperty
 
     private val includeRootDir: File
         get() = project.file("src/main/resources/include")
 
     private val extensionsRootDir: File
         get() = project.file("src/main/resources/init.d")
+
+    init {
+        downloadRootDir.convention(
+            project.providers
+                .gradleProperty("gradleDist.downloadRootDir")
+                .flatMap { project.layout.buildDirectory.dir(it) }
+                .orElse(project.layout.buildDirectory.dir("download"))
+        )
+    }
 
     @TaskAction
     fun build() {
@@ -73,7 +87,7 @@ abstract class BuildCustomGradleDistributionTask : DefaultTask() {
     private fun doGetBaseGradleDistribution(extension: CustomGradleDistConfig): File {
         val gradleBaseName = "gradle-${extension.gradleVersion.get()}"
         val gradleZip = "$gradleBaseName-${extension.gradleDistributionType.get()}.zip"
-        val baseGradleArchive = project.layout.buildDirectory.file("download/$gradleZip").get().asFile
+        val baseGradleArchive = downloadRootDir.map { it.dir(gradleZip) }.get().asFile
         if (!baseGradleArchive.isFile) {
             val archiveDir = baseGradleArchive.parentFile
             if (!archiveDir.isDirectory) {
