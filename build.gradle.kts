@@ -12,6 +12,25 @@ kotlin {
     jvmToolchain(8)
 }
 
+testing {
+    suites {
+        withType<JvmTestSuite> {
+            targets {
+                all {
+                    testTask.configure {
+                        // Share Gradle downloads between tests runs for much
+                        // faster feedback
+                        systemProperty(
+                            "gradleDistTest.downloadRootDir",
+                            File(temporaryDir, "gradle-download")
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
 gradlePlugin {
     website = "https://gradle-dist.oss.harmonysoft.tech/"
     vcsUrl = "https://github.com/denis-zhdanov/custom-gradle-dist-gradle-plugin"

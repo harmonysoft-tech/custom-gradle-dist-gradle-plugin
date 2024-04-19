@@ -11,10 +11,12 @@ import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
 import org.assertj.core.api.Assertions.assertThat
 import org.gradle.testkit.runner.GradleRunner
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.CleanupMode
 import org.junit.jupiter.api.io.TempDir
 import tech.harmonysoft.oss.test.util.TestUtil.fail
+import java.nio.file.Paths
 
 class CustomGradleDistributionPluginTest {
 
@@ -543,7 +545,6 @@ class CustomGradleDistributionPluginTest {
         const val PROJECT_NAME = "my-project"
         const val PROJECT_VERSION = "1.0"
 
-        @field:TempDir(cleanup = CleanupMode.ON_SUCCESS)
         lateinit var DOWNLOAD_ROOT_DIR: Path
 
         @field:TempDir(cleanup = CleanupMode.ON_SUCCESS)
@@ -560,5 +561,15 @@ class CustomGradleDistributionPluginTest {
                 customDistributionName = "$PROJECT_NAME"
             }
         """.trimIndent()
+
+        @BeforeAll @JvmStatic fun setup() {
+            val downloadRootDir = System.getProperty("gradleDistTest.downloadRootDir")
+
+            if (downloadRootDir.isNullOrEmpty()) {
+                DOWNLOAD_ROOT_DIR = TESTS_ARTIFACTS_ROOT_DIR.resolve("gradle-download")
+            } else {
+                DOWNLOAD_ROOT_DIR = Paths.get(downloadRootDir)
+            }
+        }
     }
 }
