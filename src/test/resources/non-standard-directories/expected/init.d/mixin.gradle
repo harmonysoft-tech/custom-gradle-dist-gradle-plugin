@@ -1,0 +1,5 @@
+initscript {
+    repositories {
+        mavenCentral()
+    }
+}

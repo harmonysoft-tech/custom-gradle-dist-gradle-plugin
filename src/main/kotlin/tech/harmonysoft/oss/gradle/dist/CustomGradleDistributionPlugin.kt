@@ -10,11 +10,11 @@ class CustomGradleDistributionPlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
         val config = project.extensions.create("gradleDist", CustomGradleDistConfig::class.java)
+        project.tasks.register("buildGradleDist", BuildCustomGradleDistributionTask::class.java) {
+            it.config.set(config)
+        }
         project.afterEvaluate {
             validateAndEnrich(config)
-            project.tasks.register("buildGradleDist", BuildCustomGradleDistributionTask::class.java) {
-                it.config.set(config)
-            }
         }
     }
 
