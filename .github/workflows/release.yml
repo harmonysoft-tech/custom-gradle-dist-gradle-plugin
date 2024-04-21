@@ -1,0 +1,12 @@
+name: Java CI with Gradle
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    uses: harmonysoft-tech/ci/.github/workflows/gradle-plugin.yml@main
+    secrets: inherit
+    permissions:
+      contents: write

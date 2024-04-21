@@ -1,7 +1,8 @@
 plugins {
-    kotlin("jvm") version "1.9.10"
+    `java-gradle-plugin`
+    kotlin("jvm") version "1.9.23"
     id("com.gradle.plugin-publish") version "1.2.1"
-    id("tech.harmonysoft.oss.gradle.release.paperwork") version "1.7.0"
+    id("tech.harmonysoft.oss.gradle.release.paperwork") version "1.10.0"
 }
 
 group = "tech.harmonysoft"
@@ -30,10 +31,8 @@ repositories {
 }
 
 dependencies {
-    api(gradleApi())
-    testImplementation(gradleTestKit())
-    testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
-    testImplementation("org.assertj:assertj-core:3.24.2")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
+    testImplementation("org.assertj:assertj-core:3.25.3")
     testImplementation("tech.harmonysoft:harmonysoft-common-test:1.92.0")
 }
 
