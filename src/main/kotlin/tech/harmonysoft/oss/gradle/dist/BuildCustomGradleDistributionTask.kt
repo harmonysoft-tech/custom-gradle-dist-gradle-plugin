@@ -101,7 +101,7 @@ abstract class BuildCustomGradleDistributionTask : DefaultTask() {
     private fun doGetBaseGradleDistribution(extension: CustomGradleDistConfig): File {
         val gradleBaseName = "gradle-${extension.gradleVersion.get()}"
         val gradleZip = "$gradleBaseName-${extension.gradleDistributionType.get()}.zip"
-        val baseGradleArchive = downloadRootDir.map { it.dir(gradleZip) }.get().asFile
+        val baseGradleArchive = downloadRootDir.map { it.file(gradleZip) }.get().asFile
         if (!baseGradleArchive.isFile) {
             val archiveDir = baseGradleArchive.parentFile
             if (!archiveDir.isDirectory) {
