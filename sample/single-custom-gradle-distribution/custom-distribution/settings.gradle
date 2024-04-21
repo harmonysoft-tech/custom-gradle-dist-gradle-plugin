@@ -1,1 +1,9 @@
+pluginManagement {
+    includeBuild('../../../') {
+        logger.warn(
+            'Replaced indicated version of the Plugin with the current implementation from the root project directory.'
+        )
+    }
+}
+
 rootProject.name = 'single-custom-gradle-distribution'

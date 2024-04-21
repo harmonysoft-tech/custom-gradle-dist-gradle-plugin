@@ -15,10 +15,10 @@ This is an example of using custom Gradle distribution for projects with the sam
 ## In Action
 
 1. Build custom distribution  
-    `pushd custom-distribution; ./gradlew build; popd`
+    `pushd custom-distribution; ./gradlew buildGradleDist; popd`
 2. Run the client project  
     `pushd client-project; ./gradlew bootRun; popd`  
-3. Call a web server server started by the client project and ensure that it works  
+3. Call a web server started by the client project and ensure that it works  
     ```
     curl 127.0.0.1:8080/ping
     Hi there!
