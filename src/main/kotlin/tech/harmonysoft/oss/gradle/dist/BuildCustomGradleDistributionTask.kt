@@ -45,10 +45,7 @@ abstract class BuildCustomGradleDistributionTask : DefaultTask() {
 
     init {
         downloadRootDir.convention(
-            project.providers
-                .gradleProperty("gradleDist.downloadRootDir")
-                .flatMap { project.layout.buildDirectory.dir(it) }
-                .orElse(project.layout.buildDirectory.dir("download"))
+            project.layout.buildDirectory.dir("download")
         )
         project.layout.projectDirectory.dir("src/main/resources/include").let {
             if (it.asFile.exists()) includeRootDir.convention(it)
