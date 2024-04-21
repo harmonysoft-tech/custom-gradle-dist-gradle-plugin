@@ -1,3 +1,5 @@
+## v1.17.0 released on 21 Apr 2024 UTC
+  * 5e13af03d900cfa42959ca02aa299a2cdc6f05f6 bump version
 ## v1.16.0 released on 21 Apr 2024 UTC
   * eb280ac0863ad9b6cd8257a9d618d69ab48596de corrected branch for CI
 ## v1.15.0 released on 09 Apr 2024 UTC
