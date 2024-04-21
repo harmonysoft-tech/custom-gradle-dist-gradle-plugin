@@ -1,3 +1,5 @@
+## v1.16.0 released on 21 Apr 2024 UTC
+  * eb280ac0863ad9b6cd8257a9d618d69ab48596de corrected branch for CI
 ## v1.15.0 released on 09 Apr 2024 UTC
   * ed1b44c494b620caf78d4fffc0a639120f31328e corrected the logging
 ## v1.14.0 released on 28 Nov 2023 UTC
