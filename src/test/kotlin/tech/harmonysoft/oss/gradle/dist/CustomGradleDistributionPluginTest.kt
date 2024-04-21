@@ -149,7 +149,7 @@ class CustomGradleDistributionPluginTest {
 
     @Test
     fun `when custom single gradle distribution is built with non-default distribution type then it contains base distribution type`() {
-        val testFiles = withDistributionType("all").doTest("single-distribution-no-templates", """
+        val testFiles = doTest("single-distribution-no-templates", """
             plugins {
                 id("tech.harmonysoft.oss.custom-gradle-dist-plugin")
             }
@@ -208,7 +208,7 @@ class CustomGradleDistributionPluginTest {
 
     @Test
     fun `when multiple distributions are configured with non-default type then multiple distributions with correct names are created`() {
-        val testFiles = withDistributionType("all").doTest("multiple-distributions", """
+        val testFiles = doTest("multiple-distributions", """
             plugins {
                 id("tech.harmonysoft.oss.custom-gradle-dist-plugin")
             }
@@ -231,7 +231,7 @@ class CustomGradleDistributionPluginTest {
 
     @Test
     fun `when custom distribution file name mapper is configured in gradle groovy script then it is respected`() {
-        val testFiles = withDistributionType("all").prepareInput("single-distribution-no-templates", """
+        val testFiles = prepareInput("single-distribution-no-templates", """
             import tech.harmonysoft.oss.gradle.dist.config.CustomDistributionNameMapper
 
             plugins {
@@ -257,7 +257,7 @@ class CustomGradleDistributionPluginTest {
 
     @Test
     fun `when custom distribution file name mapper is configured in gradle kotlin script then it is respected`() {
-        val testFiles = withDistributionType("all").doTest("single-distribution-no-templates", """
+        val testFiles = doTest("single-distribution-no-templates", """
             import tech.harmonysoft.oss.gradle.dist.config.CustomDistributionNameMapper
             plugins {
                 id("tech.harmonysoft.oss.custom-gradle-dist-plugin")
@@ -446,8 +446,10 @@ class CustomGradleDistributionPluginTest {
     private fun prepareGradleDistributionZip(projectRootDir: File) {
         val downloadDir = File(projectRootDir, "build/download")
         Files.createDirectories(downloadDir.toPath())
-        val zip = File(downloadDir, "gradle-${GRADLE_VERSION}-${distributionType}.zip")
-        createGradleDistributionZip(zip)
+        listOf("bin", "all").forEach {
+            val zip = File(downloadDir, "gradle-${GRADLE_VERSION}-${it}.zip")
+            createGradleDistributionZip(zip)
+        }
     }
 
     private fun createGradleDistributionZip(zip: File) {
@@ -580,13 +582,6 @@ class CustomGradleDistributionPluginTest {
 
         verify(testFiles.expectedRootDir, File(testFiles.inputRootDir, buildDistsDir))
     }
-
-    private fun withDistributionType(type: String): CustomGradleDistributionPluginTest {
-        distributionType = type
-        return this
-    }
-
-    private var distributionType = DEFAULT_DISTRIBUTION_TYPE
 
     data class TestFiles(
         val inputRootDir: File,
