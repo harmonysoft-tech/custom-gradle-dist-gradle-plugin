@@ -181,12 +181,12 @@ class CustomGradleDistributionPluginTest {
                 gradleVersion = "$GRADLE_VERSION"
                 customDistributionVersion = "$PROJECT_VERSION"
                 customDistributionName = "$PROJECT_NAME"
+                utilityScriptsSourceDir = project.layout.projectDirectory.dir("src/main/resources/own-include")
+                initScriptsSourceDir = project.layout.projectDirectory.dir("src/main/resources/own-init.d")
             }
             
             tasks.named<BuildCustomGradleDistributionTask>("buildGradleDist") {
-                includeRootDir = project.layout.projectDirectory.dir("src/main/resources/own-include")
-                extensionsRootDir = project.layout.projectDirectory.dir("src/main/resources/own-init.d")
-                customDistributionsRootDir = project.layout.buildDirectory.dir("own-gradle-dist")
+                customDistributionOutputDir = project.layout.buildDirectory.dir("own-gradle-dist")
             }
         """.trimIndent(), "build/own-gradle-dist")
         val expectedCustomDistributionFile = File(
@@ -444,7 +444,7 @@ class CustomGradleDistributionPluginTest {
     }
 
     private fun prepareGradleDistributionZip(projectRootDir: File) {
-        val downloadDir = File(projectRootDir, "build/download")
+        val downloadDir = File(projectRootDir, "build/gradle-download")
         Files.createDirectories(downloadDir.toPath())
         listOf("bin", "all").forEach {
             val zip = File(downloadDir, "gradle-${GRADLE_VERSION}-${it}.zip")

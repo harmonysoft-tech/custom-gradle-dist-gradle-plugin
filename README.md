@@ -71,7 +71,7 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
      **mandatory settings:**
      * `gradleVersion` - base Gradle wrapper version
      * `customDistributionVersion` - custom distribution version (`project.version` is used by default)
-     * `customDistributionFileNameMapper` - a property of type [CustomDistributionNameMapper](./src/main/kotlin/tech/harmonysoft/oss/gradle/dist/config/CustomDistributionNameMapper.kt) which generates resulting custom distribution file name for the given parameters. *Note: it's necessary to specify this property or 'distributionNameMapper' property. It's an error to define the both/none of them*
+     * `customDistributionFileNameMapper` - a property of type [CustomDistributionNameMapper](./src/main/kotlin/tech/harmonysoft/oss/gradle/dist/config/CustomDistributionNameMapper.kt) which generates resulting custom distribution file name for the given parameters. *Note: it's necessary to specify this property or `distributionNameMapper` property. It's an error to define the both/none of them*
        * `gradleVersion` - base gradle distribution version as defined above
        * `customDistributionVersion` - custom distribution mixing version as defined above
        * `gradleDistributionType` - gradle distribution type as defined below
@@ -118,10 +118,13 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
            }
        }
        ```
-     *Note: it's necessary to specify this property or 'customDistributionFileNameMapper' property. It's an error to define the both/none of them*
+       *Note: it's necessary to specify this property or `customDistributionFileNameMapper` property. It's an error to define the both/none of them*
+    
+    * `initScriptsSourceDir` - a path to the directory where your initialization scripts are located (see below docs for more details). The path to the directory must be set, and the pointed directory must exist. The default path is `src/main/resources/init.d`.
      
      **optional settings:**
-     * `gradleDistributionType` - allows to specify base Gradle distribution type. `bin` and `all` [are available](https://docs.gradle.org/current/userguide/gradle_wrapper.html#sec:adding_wrapper) at the moment, `bin` is used by default  
+     * `gradleDistributionType` - allows to specify base Gradle distribution type. `bin` and `all` [are available](https://docs.gradle.org/current/userguide/gradle_wrapper.html#sec:adding_wrapper) at the moment, `bin` is used by default
+     * `utilityScriptsSourceDir` - a path to the directory where your utility scripts and replacements are located (see below docs for more details). The path to the directory is optional, but the pointed directory must exist. The default path is `src/main/resources/include`.
      * `skipContentExpansionFor` - the plugin by default expands content of the files included into custom Gradle distribution by default (see below). That might cause a problem if we want to add some binary file like `*.jar` or `*.so`. This property holds a list of root paths relative to `init.d` which content shouldn't be expanded.  
        Example: consider the following project structure:
        ```
@@ -269,6 +272,16 @@ Gradle automatically applies [init scripts](https://docs.gradle.org/current/user
     ```
     
     The distribution(s) are located in the `build/gradle-dist`
+
+6. In addition, if you need, you can configure the properties of the `buildGradleDist` task, such as the path to the directory where downloaded Gradle distributions and built custom Gradle distributions should be located.  You can do this as follows:
+    ```groovy
+    import tech.harmonysoft.oss.gradle.dist.BuildCustomGradleDistributionTask
+   
+    tasks.named('buildGradleDist', BuildCustomGradleDistributionTask) {
+        gradleDownloadDir = project.layout.buildDirectory.dir('own-gradle-download') 
+        customDistributionOutputDir = project.layout.buildDirectory.dir('own-gradle-dist') 
+    }
+    ```
 
 ### Configure Client Project
 

@@ -11,9 +11,11 @@ class CustomGradleDistributionPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         val config = createAndConfigureExtension(project)
 
-        project.tasks.register("buildGradleDist", BuildCustomGradleDistributionTask::class.java) {
-            it.config.set(config)
-        }
+        project.tasks.register(
+            "buildGradleDist",
+            BuildCustomGradleDistributionTask::class.java,
+            config
+        )
         project.afterEvaluate {
             validateAndEnrich(config)
         }
@@ -28,6 +30,12 @@ class CustomGradleDistributionPlugin : Plugin<Project> {
             project.provider { project.version.toString() }
         )
         config.gradleDistributionType.convention("bin")
+        project.layout.projectDirectory.dir("src/main/resources/include").let {
+            if (it.asFile.exists()) config.utilityScriptsSourceDir.convention(it)
+        }
+        config.initScriptsSourceDir.convention(
+            project.layout.projectDirectory.dir("src/main/resources/init.d")
+        )
         config.skipContentExpansionFor.convention(emptyList())
         config.rootUrlMapper.convention(GradleUrlMapper { version, type ->
             "https://services.gradle.org/distributions/gradle-$version-${type}.zip"
