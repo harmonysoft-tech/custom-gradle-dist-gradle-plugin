@@ -36,7 +36,6 @@ abstract class BuildCustomGradleDistributionTask : DefaultTask() {
     @get:InputDirectory
     abstract val includeRootDir: DirectoryProperty
 
-    @get:Optional
     @get:InputDirectory
     abstract val extensionsRootDir: DirectoryProperty
 
@@ -50,9 +49,9 @@ abstract class BuildCustomGradleDistributionTask : DefaultTask() {
         project.layout.projectDirectory.dir("src/main/resources/include").let {
             if (it.asFile.exists()) includeRootDir.convention(it)
         }
-        project.layout.projectDirectory.dir("src/main/resources/init.d").let {
-            if (it.asFile.exists()) extensionsRootDir.convention(it)
-        }
+        extensionsRootDir.convention(
+            project.layout.projectDirectory.dir("src/main/resources/init.d")
+        )
         customDistributionsRootDir.convention(
             project.layout.buildDirectory.dir("gradle-dist")
         )
@@ -150,8 +149,8 @@ abstract class BuildCustomGradleDistributionTask : DefaultTask() {
     }
 
     private fun getDistributions(): Collection<String> {
-        val extensionsRootDir = this.extensionsRootDir.orNull?.asFile
-        val childDirectories = extensionsRootDir?.listFiles(FileFilter { it.isDirectory })
+        val extensionsRootDir = this.extensionsRootDir.get().asFile
+        val childDirectories = extensionsRootDir.listFiles(FileFilter { it.isDirectory })
         return if (childDirectories == null || childDirectories.size < 2) {
             project.logger.lifecycle("using a single custom gradle distribution")
             emptyList()
@@ -388,7 +387,9 @@ abstract class BuildCustomGradleDistributionTask : DefaultTask() {
             mapOf("create" to "true")
         )
         .use { zipFileSystem ->
-            extensionsRootDir.orNull?.asFile?.let { extensionsRootDir ->
+            val extensionsRootDir = this.extensionsRootDir.get().asFile
+
+            extensionsRootDir.let { extensionsRootDir ->
                 addToZip(
                     zip = zipFileSystem,
                     includeRootDir = distribution?.let {
