@@ -1,3 +1,5 @@
+## v1.18.0 released on 22 Apr 2024 UTC
+  * 87bcc45108c11897aa8e381dec3173e90a444005 Merge pull request #15 from piotrminkina/feature/expose-task-properties
 ## v1.17.0 released on 21 Apr 2024 UTC
   * 5e13af03d900cfa42959ca02aa299a2cdc6f05f6 bump version
 ## v1.16.0 released on 21 Apr 2024 UTC
