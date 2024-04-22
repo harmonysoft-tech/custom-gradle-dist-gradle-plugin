@@ -5,7 +5,6 @@ import java.io.FileFilter
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.net.URI
-import java.net.URL
 import java.nio.channels.Channels
 import java.nio.file.FileSystem
 import java.nio.file.FileSystems
@@ -13,38 +12,49 @@ import java.nio.file.Files
 import java.util.Properties
 import java.util.Stack
 import org.gradle.api.DefaultTask
-import org.gradle.api.provider.Property
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Nested
+import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.tooling.BuildException
 import tech.harmonysoft.oss.gradle.dist.config.CustomGradleDistConfig
+import javax.inject.Inject
 
-abstract class BuildCustomGradleDistributionTask : DefaultTask() {
+@Suppress("LeakingThis")
+abstract class BuildCustomGradleDistributionTask @Inject constructor(
+    @get:Nested val config: CustomGradleDistConfig
+) : DefaultTask() {
 
     @get:Internal
-    abstract val config: Property<CustomGradleDistConfig>
+    abstract val gradleDownloadDir: DirectoryProperty
 
-    private val includeRootDir: File
-        get() = project.file("src/main/resources/include")
+    @get:OutputDirectory
+    abstract val customDistributionOutputDir: DirectoryProperty
 
-    private val extensionsRootDir: File
-        get() = project.file("src/main/resources/init.d")
+    init {
+        gradleDownloadDir.convention(
+            project.layout.buildDirectory.dir("gradle-download")
+        )
+        customDistributionOutputDir.convention(
+            project.layout.buildDirectory.dir("gradle-dist")
+        )
+    }
 
     @TaskAction
     fun build() {
-        val baseDistribution = getBaseGradleDistribution(config.get())
-        val customDistributionsDir = getCustomDistributionsRootDir()
+        val baseDistribution = getBaseGradleDistribution(config)
+        val customDistributionsDir = customDistributionOutputDir.get().asFile
         remove(customDistributionsDir)
         Files.createDirectories(customDistributionsDir.toPath())
 
-        val currentConfig = config.get()
         val replacements = prepareReplacements()
         val distributions = getDistributions()
         if (distributions.isEmpty()) {
             prepareCustomDistribution(
                 distribution = null,
                 baseDistribution = baseDistribution,
-                extension = currentConfig,
+                extension = config,
                 replacements = replacements
             )
         } else {
@@ -52,7 +62,7 @@ abstract class BuildCustomGradleDistributionTask : DefaultTask() {
                 prepareCustomDistribution(
                     distribution = distribution,
                     baseDistribution = baseDistribution,
-                    extension = currentConfig,
+                    extension = config,
                     replacements = replacements
                 )
             }
@@ -73,7 +83,7 @@ abstract class BuildCustomGradleDistributionTask : DefaultTask() {
     private fun doGetBaseGradleDistribution(extension: CustomGradleDistConfig): File {
         val gradleBaseName = "gradle-${extension.gradleVersion.get()}"
         val gradleZip = "$gradleBaseName-${extension.gradleDistributionType.get()}.zip"
-        val baseGradleArchive = project.layout.buildDirectory.file("download/$gradleZip").get().asFile
+        val baseGradleArchive = gradleDownloadDir.map { it.file(gradleZip) }.get().asFile
         if (!baseGradleArchive.isFile) {
             val archiveDir = baseGradleArchive.parentFile
             if (!archiveDir.isDirectory) {
@@ -96,16 +106,12 @@ abstract class BuildCustomGradleDistributionTask : DefaultTask() {
     }
 
     private fun download(fromUrl: String, toFile: File) {
-        val from = Channels.newChannel(URL(fromUrl).openStream())
+        val from = Channels.newChannel(URI(fromUrl).toURL().openStream())
         project.logger.lifecycle("about to download a gradle distribution from $fromUrl to ${toFile.canonicalPath}")
         FileOutputStream(toFile).channel.use {
             it.transferFrom(from, 0, Long.MAX_VALUE)
         }
         project.logger.lifecycle("downloaded a gradle distribution from $fromUrl to ${toFile.canonicalPath}")
-    }
-
-    private fun getCustomDistributionsRootDir(): File {
-        return project.layout.buildDirectory.file("gradle-dist").get().asFile
     }
 
     private fun remove(toRemove: File) {
@@ -126,7 +132,7 @@ abstract class BuildCustomGradleDistributionTask : DefaultTask() {
     }
 
     private fun getDistributions(): Collection<String> {
-        val childDirectories = extensionsRootDir.listFiles(FileFilter { it.isDirectory })
+        val childDirectories = config.initScriptsSourceDir.get().asFile.listFiles(FileFilter { it.isDirectory })
         return if (childDirectories == null || childDirectories.size < 2) {
             project.logger.lifecycle("using a single custom gradle distribution")
             emptyList()
@@ -164,8 +170,10 @@ abstract class BuildCustomGradleDistributionTask : DefaultTask() {
     }
 
     private fun loadReplacementsFromFiles(): Map<String, RichValue> {
-        return includeRootDir
-            .listFiles()
+        return config.utilityScriptsSourceDir
+            .orNull
+            ?.asFile
+            ?.listFiles()
             ?.filter {
                 it.name != REPLACEMENTS_FILE_NAME
             }?.associate { file ->
@@ -300,7 +308,7 @@ abstract class BuildCustomGradleDistributionTask : DefaultTask() {
             gradleDistributionType = extension.gradleDistributionType.get(),
             distributionName = distribution
         ).toString()
-        val customDistributionsDir = getCustomDistributionsRootDir()
+        val customDistributionsDir = customDistributionOutputDir.get().asFile
         val result = File(customDistributionsDir, customDistributionFileName)
 
         copyBaseDistribution(baseDistribution, result)
@@ -357,20 +365,23 @@ abstract class BuildCustomGradleDistributionTask : DefaultTask() {
         pathsToExcludeFromContentExpansion: Set<String>,
         replacements: Map<String, String>
     ) {
-        val zipFileSystem = FileSystems.newFileSystem(
+        FileSystems.newFileSystem(
             URI.create("jar:${zip.toPath().toUri()}"),
             mapOf("create" to "true")
         )
-        addToZip(
-            zip = zipFileSystem,
-            includeRootDir = distribution?.let {
-                File(extensionsRootDir, it)
-            } ?: extensionsRootDir,
-            gradleVersion = gradleVersion,
-            pathsToExcludeFromContentExpansion = pathsToExcludeFromContentExpansion,
-            replacements = replacements
-        )
-        zipFileSystem.close()
+        .use { zipFileSystem ->
+            config.initScriptsSourceDir.get().asFile.let { initScriptsSourceDir ->
+                addToZip(
+                    zip = zipFileSystem,
+                    includeRootDir = distribution?.let {
+                        File(initScriptsSourceDir, it)
+                    } ?: initScriptsSourceDir,
+                    gradleVersion = gradleVersion,
+                    pathsToExcludeFromContentExpansion = pathsToExcludeFromContentExpansion,
+                    replacements = replacements
+                )
+            }
+        }
     }
 
     private fun addToZip(
@@ -441,14 +452,18 @@ abstract class BuildCustomGradleDistributionTask : DefaultTask() {
         }
         if (exclusionRule == null) {
             val tempFile = Files.createTempFile("", "${fileToInclude.name}.tmp").toFile()
-            val expandedContent = expand(RichValue(
-                value = fileToInclude.readText(),
-                description = "file ${fileToInclude.name}"
-            )) {
-                replacements[it]
+            try {
+                val expandedContent = expand(RichValue(
+                    value = fileToInclude.readText(),
+                    description = "file ${fileToInclude.name}"
+                )) {
+                    replacements[it]
+                }
+                tempFile.writeText(expandedContent)
+                Files.copy(tempFile.toPath(), to)
+            } finally {
+                tempFile.delete()
             }
-            tempFile.writeText(expandedContent)
-            Files.copy(tempFile.toPath(), to)
         } else {
             project.logger.lifecycle(
                 "skipped content expansion for file $relativePath because of exclusion rule '$exclusionRule'"
@@ -471,6 +486,6 @@ abstract class BuildCustomGradleDistributionTask : DefaultTask() {
 
     companion object {
         private val PATTERN = """\$(\S+)\$""".toRegex()
-        private val REPLACEMENTS_FILE_NAME = "replacements.properties"
+        private const val REPLACEMENTS_FILE_NAME = "replacements.properties"
     }
 }

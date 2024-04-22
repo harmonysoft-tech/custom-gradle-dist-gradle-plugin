@@ -9,22 +9,45 @@ import tech.harmonysoft.oss.gradle.dist.config.GradleUrlMapper
 class CustomGradleDistributionPlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
-        val config = project.extensions.create("gradleDist", CustomGradleDistConfig::class.java)
+        val config = createAndConfigureExtension(project)
+
+        project.tasks.register(
+            "buildGradleDist",
+            BuildCustomGradleDistributionTask::class.java,
+            config
+        )
         project.afterEvaluate {
             validateAndEnrich(config)
-            project.tasks.register("buildGradleDist", BuildCustomGradleDistributionTask::class.java) {
-                it.config.set(config)
-            }
         }
+    }
+
+    private fun createAndConfigureExtension(project: Project): CustomGradleDistConfig {
+        val config = project.extensions.create(
+            "gradleDist", CustomGradleDistConfig::class.java
+        )
+
+        config.customDistributionVersion.convention(
+            project.provider { project.version.toString() }
+        )
+        config.gradleDistributionType.convention("bin")
+        project.layout.projectDirectory.dir("src/main/resources/include").let {
+            if (it.asFile.exists()) config.utilityScriptsSourceDir.convention(it)
+        }
+        config.initScriptsSourceDir.convention(
+            project.layout.projectDirectory.dir("src/main/resources/init.d")
+        )
+        config.skipContentExpansionFor.convention(emptyList())
+        config.rootUrlMapper.convention(GradleUrlMapper { version, type ->
+            "https://services.gradle.org/distributions/gradle-$version-${type}.zip"
+        })
+
+        return config
     }
 
     private fun validateAndEnrich(config: CustomGradleDistConfig) {
         validateGradleVersion(config)
         validateCustomDistributionVersion(config)
         configureCustomDistributionName(config)
-        configureDistributionTypeIfNecessary(config)
-        configureGradleUrlMapperIfNecessary(config)
-        configurePathToExcludeFromExpansionIfNecessary(config)
     }
 
     private fun validateGradleVersion(config: CustomGradleDistConfig) {
@@ -79,26 +102,6 @@ class CustomGradleDistributionPlugin : Plugin<Project> {
                     "$prefix-$it-$suffix"
                 } ?: "$prefix-$suffix"
             }
-        }
-    }
-
-    private fun configureDistributionTypeIfNecessary(config: CustomGradleDistConfig) {
-        if (!config.gradleDistributionType.isPresent) {
-            config.gradleDistributionType.set("bin")
-        }
-    }
-
-    private fun configureGradleUrlMapperIfNecessary(config: CustomGradleDistConfig) {
-        if (!config.rootUrlMapper.isPresent) {
-            config.rootUrlMapper.set(GradleUrlMapper { version, type ->
-                "https://services.gradle.org/distributions/gradle-$version-${type}.zip"
-            })
-        }
-    }
-
-    private fun configurePathToExcludeFromExpansionIfNecessary(config: CustomGradleDistConfig) {
-        if (!config.skipContentExpansionFor.isPresent) {
-            config.skipContentExpansionFor.set(emptyList())
         }
     }
 }

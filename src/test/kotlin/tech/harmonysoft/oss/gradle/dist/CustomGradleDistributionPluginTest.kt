@@ -12,6 +12,8 @@ import java.util.zip.ZipOutputStream
 import org.assertj.core.api.Assertions.assertThat
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.CleanupMode
+import org.junit.jupiter.api.io.TempDir
 import tech.harmonysoft.oss.test.util.TestUtil.fail
 
 class CustomGradleDistributionPluginTest {
@@ -44,6 +46,27 @@ class CustomGradleDistributionPluginTest {
     @Test
     fun `when multiple distributions are configured then multiple distributions are created`() {
         doTest("multiple-distributions")
+    }
+
+    @Test
+    fun `when custom single gradle distribution is built with project distribution version`() {
+        val testFiles = doTest("single-distribution-no-templates", """
+            plugins {
+                id("tech.harmonysoft.oss.custom-gradle-dist-plugin")
+            }
+            
+            version = "1.1"
+            
+            gradleDist {
+                gradleVersion = "$GRADLE_VERSION"
+                customDistributionName = "$PROJECT_NAME"
+            }
+        """.trimIndent())
+        val expectedCustomDistributionFile = File(
+            testFiles.inputRootDir,
+            "$BUILT_DISTS_DIR/gradle-$GRADLE_VERSION-$PROJECT_NAME-1.1-bin.zip"
+        )
+        verifyDistributionName(expectedCustomDistributionFile)
     }
 
     @Test
@@ -118,7 +141,7 @@ class CustomGradleDistributionPluginTest {
         val testFiles = doTest("single-distribution-no-templates")
         val expectedCustomDistributionFile = File(
             testFiles.inputRootDir,
-            "build/gradle-dist/gradle-$GRADLE_VERSION-$PROJECT_NAME-$PROJECT_VERSION-bin.zip"
+            "$BUILT_DISTS_DIR/gradle-$GRADLE_VERSION-$PROJECT_NAME-$PROJECT_VERSION-bin.zip"
         )
         verifyDistributionName(expectedCustomDistributionFile)
         assertThat(expectedCustomDistributionFile).exists()
@@ -140,7 +163,35 @@ class CustomGradleDistributionPluginTest {
         """.trimIndent())
         val expectedCustomDistributionFile = File(
             testFiles.inputRootDir,
-            "build/gradle-dist/gradle-$GRADLE_VERSION-$PROJECT_NAME-$PROJECT_VERSION-all.zip"
+            "$BUILT_DISTS_DIR/gradle-$GRADLE_VERSION-$PROJECT_NAME-$PROJECT_VERSION-all.zip"
+        )
+        verifyDistributionName(expectedCustomDistributionFile)
+    }
+
+    @Test
+    fun `when custom single gradle distribution is built with non-standard directories`() {
+        val testFiles = doTest("non-standard-directories", """
+            import tech.harmonysoft.oss.gradle.dist.BuildCustomGradleDistributionTask
+            
+            plugins {
+                id("tech.harmonysoft.oss.custom-gradle-dist-plugin")
+            }
+            
+            gradleDist {
+                gradleVersion = "$GRADLE_VERSION"
+                customDistributionVersion = "$PROJECT_VERSION"
+                customDistributionName = "$PROJECT_NAME"
+                utilityScriptsSourceDir = project.layout.projectDirectory.dir("src/main/resources/own-include")
+                initScriptsSourceDir = project.layout.projectDirectory.dir("src/main/resources/own-init.d")
+            }
+            
+            tasks.named<BuildCustomGradleDistributionTask>("buildGradleDist") {
+                customDistributionOutputDir = project.layout.buildDirectory.dir("own-gradle-dist")
+            }
+        """.trimIndent(), "build/own-gradle-dist")
+        val expectedCustomDistributionFile = File(
+            testFiles.inputRootDir,
+            "build/own-gradle-dist/gradle-$GRADLE_VERSION-$PROJECT_NAME-$PROJECT_VERSION-bin.zip"
         )
         verifyDistributionName(expectedCustomDistributionFile)
     }
@@ -172,7 +223,7 @@ class CustomGradleDistributionPluginTest {
         for (distribution in listOf("library", "service")) {
             val expectedCustomDistributionFile = File(
                 testFiles.inputRootDir,
-                "build/gradle-dist/gradle-$GRADLE_VERSION-$PROJECT_NAME-$PROJECT_VERSION-$distribution-all.zip"
+                "$BUILT_DISTS_DIR/gradle-$GRADLE_VERSION-$PROJECT_NAME-$PROJECT_VERSION-$distribution-all.zip"
             )
             verifyDistributionName(expectedCustomDistributionFile)
         }
@@ -199,7 +250,7 @@ class CustomGradleDistributionPluginTest {
         runAndVerify(testFiles)
         val expectedCustomDistributionFile = File(
             testFiles.inputRootDir,
-            "build/gradle-dist/all-custom-${PROJECT_VERSION}-base-$GRADLE_VERSION.zip"
+            "$BUILT_DISTS_DIR/all-custom-${PROJECT_VERSION}-base-$GRADLE_VERSION.zip"
         )
         verifyDistributionName(expectedCustomDistributionFile)
     }
@@ -224,7 +275,7 @@ class CustomGradleDistributionPluginTest {
         """.trimIndent())
         val expectedCustomDistributionFile = File(
             testFiles.inputRootDir,
-            "build/gradle-dist/all-custom-${PROJECT_VERSION}-base-$GRADLE_VERSION.zip"
+            "$BUILT_DISTS_DIR/all-custom-${PROJECT_VERSION}-base-$GRADLE_VERSION.zip"
         )
         verifyDistributionName(expectedCustomDistributionFile)
     }
@@ -290,7 +341,7 @@ class CustomGradleDistributionPluginTest {
 
     @Test
     fun `when custom base gradle distribution mapper is defined in gradle groovy script then it's respected`() {
-        val customBaseGradleDistFile = Files.createTempFile("base-gradle-dist", "").toFile()
+        val customBaseGradleDistFile = Files.createTempFile(TESTS_ARTIFACTS_ROOT_DIR, "base-gradle-dist", "").toFile()
         createGradleDistributionZip(customBaseGradleDistFile)
         val testFiles = prepareInput("single-distribution-no-templates","""
             import tech.harmonysoft.oss.gradle.dist.config.GradleUrlMapper
@@ -313,7 +364,7 @@ class CustomGradleDistributionPluginTest {
 
     @Test
     fun `when custom base gradle distribution mapper is defined in gradle kotlin script then it's respected`() {
-        val customBaseGradleDistFile = Files.createTempFile("base-gradle-dist", "").toFile()
+        val customBaseGradleDistFile = Files.createTempFile(TESTS_ARTIFACTS_ROOT_DIR, "base-gradle-dist", "").toFile()
         createGradleDistributionZip(customBaseGradleDistFile)
         val testFiles = prepareInput("single-distribution-no-templates", """
             import tech.harmonysoft.oss.gradle.dist.config.GradleUrlMapper
@@ -338,9 +389,9 @@ class CustomGradleDistributionPluginTest {
         return doTest(testName, BUILD_TEMPLATE)
     }
 
-    private fun doTest(testName: String, buildGradleContent: String): TestFiles {
+    private fun doTest(testName: String, buildGradleContent: String, buildDistsDir: String = BUILT_DISTS_DIR): TestFiles {
         val testFiles = prepareInput(testName, buildGradleContent)
-        runAndVerify(testFiles)
+        runAndVerify(testFiles, buildDistsDir)
         return testFiles
     }
 
@@ -361,9 +412,7 @@ class CustomGradleDistributionPluginTest {
     }
 
     private fun copy(dir: File): File {
-        val result = Files.createTempDirectory("${dir.name}-tmp").toFile().apply {
-            deleteOnExit()
-        }
+        val result = Files.createTempDirectory(TESTS_ARTIFACTS_ROOT_DIR, dir.name).toFile()
         val resourcesRoot = File(result, "src/main/resources")
         Files.createDirectories(resourcesRoot.toPath())
         dir.listFiles()?.forEach { child ->
@@ -395,10 +444,12 @@ class CustomGradleDistributionPluginTest {
     }
 
     private fun prepareGradleDistributionZip(projectRootDir: File) {
-        val downloadDir = File(projectRootDir, "build/download")
+        val downloadDir = File(projectRootDir, "build/gradle-download")
         Files.createDirectories(downloadDir.toPath())
-        val zip = File(downloadDir, "gradle-${GRADLE_VERSION}-bin.zip")
-        createGradleDistributionZip(zip)
+        listOf("bin", "all").forEach {
+            val zip = File(downloadDir, "gradle-${GRADLE_VERSION}-${it}.zip")
+            createGradleDistributionZip(zip)
+        }
     }
 
     private fun createGradleDistributionZip(zip: File) {
@@ -482,7 +533,7 @@ class CustomGradleDistributionPluginTest {
             )
         }
         val zip = zips.first()
-        val rootUnzipDir = Files.createTempDirectory(zip.name).toFile()
+        val rootUnzipDir = Files.createTempDirectory(TESTS_ARTIFACTS_ROOT_DIR, zip.name).toFile()
         val zipFile = ZipFile(zip)
         for (zipEntry in zipFile.entries()) {
             val path = File(rootUnzipDir, zipEntry.name).toPath()
@@ -521,7 +572,7 @@ class CustomGradleDistributionPluginTest {
         return result
     }
 
-    private fun runAndVerify(testFiles: TestFiles) {
+    private fun runAndVerify(testFiles: TestFiles, buildDistsDir: String = BUILT_DISTS_DIR) {
         GradleRunner.create()
             .withProjectDir(testFiles.inputRootDir)
             .withArguments("buildGradleDist", "--stacktrace")
@@ -529,7 +580,7 @@ class CustomGradleDistributionPluginTest {
             .withDebug(true)
             .build()
 
-        verify(testFiles.expectedRootDir, File(testFiles.inputRootDir, "build/gradle-dist"))
+        verify(testFiles.expectedRootDir, File(testFiles.inputRootDir, buildDistsDir))
     }
 
     data class TestFiles(
@@ -542,6 +593,11 @@ class CustomGradleDistributionPluginTest {
         const val GRADLE_VERSION = "8.3"
         const val PROJECT_NAME = "my-project"
         const val PROJECT_VERSION = "1.0"
+        const val DEFAULT_DISTRIBUTION_TYPE = "bin"
+        const val BUILT_DISTS_DIR = "build/gradle-dist"
+
+        @field:TempDir(cleanup = CleanupMode.ON_SUCCESS)
+        lateinit var TESTS_ARTIFACTS_ROOT_DIR: Path
 
         val BUILD_TEMPLATE = """
             plugins {
