@@ -1,3 +1,5 @@
+## v1.19.0 released on 22 Apr 2024 UTC
+  * 19d83de8a4b06b6a298075ffdfea8221dd9ff675 fail the build if no init scripts are available
 ## v1.18.0 released on 22 Apr 2024 UTC
   * 87bcc45108c11897aa8e381dec3173e90a444005 Merge pull request #15 from piotrminkina/feature/expose-task-properties
 ## v1.17.0 released on 21 Apr 2024 UTC
