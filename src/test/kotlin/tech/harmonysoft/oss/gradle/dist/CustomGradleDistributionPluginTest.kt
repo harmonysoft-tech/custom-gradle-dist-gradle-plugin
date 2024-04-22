@@ -446,8 +446,8 @@ class CustomGradleDistributionPluginTest {
     private fun prepareGradleDistributionZip(projectRootDir: File) {
         val downloadDir = File(projectRootDir, "build/gradle-download")
         Files.createDirectories(downloadDir.toPath())
-        listOf("bin", "all").forEach {
-            val zip = File(downloadDir, "gradle-${GRADLE_VERSION}-${it}.zip")
+        for (type in DISTRIBUTION_TYPES) {
+            val zip = File(downloadDir, "gradle-${GRADLE_VERSION}-${type}.zip")
             createGradleDistributionZip(zip)
         }
     }
@@ -593,8 +593,8 @@ class CustomGradleDistributionPluginTest {
         const val GRADLE_VERSION = "8.3"
         const val PROJECT_NAME = "my-project"
         const val PROJECT_VERSION = "1.0"
-        const val DEFAULT_DISTRIBUTION_TYPE = "bin"
         const val BUILT_DISTS_DIR = "build/gradle-dist"
+        val DISTRIBUTION_TYPES = setOf("bin", "all")
 
         @field:TempDir(cleanup = CleanupMode.ON_SUCCESS)
         lateinit var TESTS_ARTIFACTS_ROOT_DIR: Path

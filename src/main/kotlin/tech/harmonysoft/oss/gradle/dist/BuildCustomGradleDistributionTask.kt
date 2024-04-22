@@ -371,11 +371,21 @@ abstract class BuildCustomGradleDistributionTask @Inject constructor(
         )
         .use { zipFileSystem ->
             config.initScriptsSourceDir.get().asFile.let { initScriptsSourceDir ->
+                val includeRootDir = distribution?.let {
+                    File(initScriptsSourceDir, it)
+                } ?: initScriptsSourceDir
+                val initScripts = includeRootDir.listFiles()?.filter {
+                    it.name.endsWith(".gradle") || it.name.endsWith(".gradle.kts")
+                } ?: emptyList()
+                if (initScripts.isEmpty()) {
+                    throw IllegalStateException(
+                        "can not generate custom distribution ${zip.name} - there must be at least one file to "
+                        + "include into its init.d, but directory ${initScriptsSourceDir.canonicalPath} is empty"
+                    )
+                }
                 addToZip(
                     zip = zipFileSystem,
-                    includeRootDir = distribution?.let {
-                        File(initScriptsSourceDir, it)
-                    } ?: initScriptsSourceDir,
+                    includeRootDir = includeRootDir,
                     gradleVersion = gradleVersion,
                     pathsToExcludeFromContentExpansion = pathsToExcludeFromContentExpansion,
                     replacements = replacements
